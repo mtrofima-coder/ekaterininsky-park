@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Екатеринский парк — Учёт смен</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0a0a;
+    --paper: #ffffff;
+    --line: #e5e5e5;
+    --muted: #8a8a8a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px 32px;
+  }
+  .wrap { width: 100%; max-width: 420px; }
+  .eyebrow {
+    font-size: 13px; letter-spacing: 0.04em;
+    color: var(--muted); margin-bottom: 10px; font-weight: 500;
+  }
+  h1 {
+    font-family: 'Manrope', sans-serif; font-style: normal;
+    font-size: 40px; line-height: 1.05; font-weight: 500;
+    color: var(--ink);
+    margin: 0 0 36px; letter-spacing: -0.01em;
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+  select {
+    width: 100%; padding: 14px 16px; border: none; border-bottom: 1.5px solid var(--ink);
+    background: transparent; color: var(--ink); font-family: 'Inter', sans-serif;
+    font-size: 16px; font-weight: 500; margin-bottom: 32px; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230a0a0a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 4px center;
+  }
+  select:focus { outline: none; }
+  .btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  button {
+    border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
+    padding: 16px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; flex: 1; transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    opacity: 0; transform: translateX(-16px); animation: slideIn 0.5s ease forwards;
+  }
+  button:active { transform: scale(0.97); }
+  #startBtn { animation-delay: 0.15s; }
+  #endBtn { animation-delay: 0.3s; }
+  #nightStartBtn { animation-delay: 0.45s; }
+  #nightEndBtn { animation-delay: 0.6s; }
+  .btn-row-night { margin-top: 4px; }
+  .btn-outline-muted {
+    border-color: var(--line); color: var(--muted); font-size: 13px;
+  }
+  .btn-outline-muted:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn-solid { background: var(--ink); color: var(--paper); }
+  .btn-solid:hover { background: #2a2a2a; }
+  button:not(.btn-solid):hover { background: var(--ink); color: var(--paper); }
+  button:disabled { opacity: 0.3 !important; cursor: not-allowed; animation: none; transform: none; }
+  @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  video, canvas, img.preview { width: 100%; margin-top: 20px; display: none; background: #000; animation: fadeUp 0.4s ease; }
+  .btn-capture { width: 100%; margin-top: 14px; display: none; }
+  .btn-capture.show { display: block; animation: fadeUp 0.4s ease; }
+  textarea {
+    width: 100%; padding: 12px 0; border: none; border-bottom: 1.5px solid var(--line);
+    background: transparent; color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
+    resize: none; margin-top: 18px; min-height: 60px; display: none; animation: fadeUp 0.4s ease;
+  }
+  textarea.show { display: block; }
+  textarea:focus { outline: none; border-bottom-color: var(--ink); }
+  .field-note { font-size: 11px; color: var(--muted); margin-top: 6px; display: none; }
+  .field-note.show { display: block; }
+  .field-note.error { color: #c0392b; }
+  .retake-row { display: none; margin-top: 14px; }
+  .retake-row.show { display: flex; animation: fadeUp 0.4s ease; }
+  .status {
+    margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted); line-height: 1.8; display: none;
+  }
+  .status.show { display: block; animation: fadeUp 0.4s ease; }
+  .status b { color: var(--ink); font-weight: 600; }
+  .tag {
+    display: inline-block; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 7px; border: 1px solid var(--ink); margin-left: 6px; font-weight: 600;
+  }
+  .tag.pending { border-color: var(--muted); color: var(--muted); }
+  .success { margin-top: 14px; font-size: 13px; font-weight: 600; }
+  .error-msg { margin-top: 14px; font-size: 13px; font-weight: 600; color: #c0392b; }
+  .footer-note { margin-top: 40px; font-size: 11px; color: var(--muted); text-align: center; max-width: 380px; line-height: 1.6; }
+  .hidden { display: none !important; }
+  .spinner {
+    display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line);
+    border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">Учёт рабочего времени</div>
+  <h1>Екатерининский парк</h1>
+
+  <label for="employee">Фамилия</label>
+  <select id="employee">
+    <option value="">Выбрать…</option>
+  </select>
+
+  <div id="actionButtons">
+    <div class="btn-row">
+      <button class="btn-solid" id="startBtn">Начать смену</button>
+      <button id="endBtn">Закончить смену</button>
+    </div>
+    <div class="btn-row btn-row-night">
+      <button class="btn-outline-muted" id="nightStartBtn">Начать ночную смену</button>
+      <button class="btn-outline-muted" id="nightEndBtn">Закончить ночную смену</button>
+    </div>
+  </div>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <img id="preview" class="preview" alt="Снимок">
+
+  <button class="btn-capture" id="captureBtn">Сделать снимок</button>
+
+  <textarea id="comment" placeholder="Опишите, что делали"></textarea>
+  <div class="field-note" id="commentNote">Заполните перед отправкой</div>
+
+  <div class="btn-row retake-row" id="retakeRow">
+    <button id="retakeBtn">Переснять</button>
+    <button class="btn-solid" id="submitBtn">Отправить</button>
+  </div>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+  // Список сотрудников подгружен сервером при открытии страницы
+  const EMPLOYEES = <?!= employeesJson ?>;
+
+  const employeeSelect = document.getElementById('employee');
+  EMPLOYEES.forEach(emp => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify({ fio: emp.fio, dolzh: emp.dolzh, dept: emp.dept });
+    opt.textContent = emp.display;
+    employeeSelect.appendChild(opt);
+  });
+
+  const startBtn = document.getElementById('startBtn');
+  const endBtn = document.getElementById('endBtn');
+  const nightStartBtn = document.getElementById('nightStartBtn');
+  const nightEndBtn = document.getElementById('nightEndBtn');
+  const actionButtons = document.getElementById('actionButtons');
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const preview = document.getElementById('preview');
+  const captureBtn = document.getElementById('captureBtn');
+  const retakeRow = document.getElementById('retakeRow');
+  const retakeBtn = document.getElementById('retakeBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('status');
+  const heading = document.querySelector('h1');
+  const eyebrowEl = document.querySelector('.eyebrow');
+  const commentField = document.getElementById('comment');
+  const commentNote = document.getElementById('commentNote');
+
+  let stream = null;
+  let shiftType = null;
+  let isNightShift = false;
+  let locationData = null;
+  let capturedPhoto = null;
+
+  function log(html) {
+    statusEl.innerHTML = html;
+    statusEl.classList.add('show');
+  }
+
+  function isWeekend(date) {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  }
+  function specialShiftReason() {
+    if (isNightShift) return 'Ночная смена';
+    if (isWeekend(new Date())) return 'Смена в выходной день';
+    return null;
+  }
+
+  async function startCamera() {
+    if (!employeeSelect.value) {
+      alert('Сначала выберите фамилию');
+      return;
+    }
+    actionButtons.classList.add('hidden');
+    video.style.display = 'block';
+    captureBtn.classList.add('show');
+    eyebrowEl.textContent = shiftType === 'start' ? 'Открываем смену' : 'Закрываем смену';
+    log('Запрашиваем доступ к камере и геолокации…');
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      video.srcObject = stream;
+    } catch (err) {
+      log('Не удалось получить доступ к камере: ' + err.message);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        locationData = { lat: pos.coords.latitude.toFixed(5), lon: pos.coords.longitude.toFixed(5) };
+        updateStatus();
+      },
+      () => { locationData = null; updateStatus(); }
+    );
+
+    updateStatus();
+  }
+
+  function updateStatus() {
+    const time = new Date().toLocaleString('ru-RU');
+    const loc = locationData ? `${locationData.lat}, ${locationData.lon}` : null;
+    const empData = JSON.parse(employeeSelect.value);
+
+    log(`
+      <div><b>Сотрудник</b> — ${empData.fio}${empData.dolzh ? ' — ' + empData.dolzh : ''}</div>
+      <div><b>Отдел</b> — ${empData.dept}</div>
+      <div><b>Событие</b> — ${shiftType === 'start' ? 'Начало смены' : 'Конец смены'}${isNightShift ? ' (ночная)' : ''}</div>
+      <div><b>Время</b> — ${time}</div>
+      <div><b>Локация</b> — ${loc ?? 'получаем…'} <span class="tag ${loc ? '' : 'pending'}">${loc ? 'OK' : 'ожидание'}</span></div>
+    `);
+  }
+
+  startBtn.addEventListener('click', () => { shiftType = 'start'; isNightShift = false; startCamera(); });
+  endBtn.addEventListener('click', () => { shiftType = 'end'; isNightShift = false; startCamera(); });
+  nightStartBtn.addEventListener('click', () => { shiftType = 'start'; isNightShift = true; startCamera(); });
+  nightEndBtn.addEventListener('click', () => { shiftType = 'end'; isNightShift = true; startCamera(); });
+
+  captureBtn.addEventListener('click', () => {
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    const timeStr = new Date().toLocaleString('ru-RU');
+    ctx.font = `${Math.floor(canvas.width / 22)}px Inter, sans-serif`;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, canvas.height - canvas.width / 9, canvas.width, canvas.width / 9);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(timeStr, 12, canvas.height - 14);
+
+    capturedPhoto = canvas.toDataURL('image/jpeg', 0.85);
+    preview.src = capturedPhoto;
+    preview.style.display = 'block';
+    video.style.display = 'none';
+    captureBtn.classList.remove('show');
+    retakeRow.classList.add('show');
+
+    if (shiftType === 'end') {
+      const reason = specialShiftReason();
+      if (reason) {
+        commentField.classList.add('show');
+        commentField.dataset.required = 'true';
+        commentField.placeholder = `${reason} — опишите, что делали`;
+      }
+    }
+
+    stream.getTracks().forEach(t => t.stop());
+    updateStatus();
+  });
+
+  retakeBtn.addEventListener('click', () => {
+    preview.style.display = 'none';
+    retakeRow.classList.remove('show');
+    startCamera();
+  });
+
+  submitBtn.addEventListener('click', () => {
+    if (commentField.dataset.required === 'true') {
+      const text = commentField.value.trim();
+      if (text.length < 10) {
+        commentNote.classList.add('show', 'error');
+        commentNote.textContent = 'Опишите чуть подробнее, что делали (минимум пара слов)';
+        commentField.focus();
+        return;
+      }
+    }
+
+    submitBtn.disabled = true;
+    retakeBtn.disabled = true;
+    log(statusEl.innerHTML + `<div><span class="spinner"></span>Отправляем данные…</div>`);
+
+    const empData = JSON.parse(employeeSelect.value);
+
+    const payload = {
+      dept: empData.dept,
+      fio: empData.fio,
+      dolzh: empData.dolzh,
+      eventType: shiftType,
+      time: new Date().toISOString(),
+      lat: locationData ? locationData.lat : '',
+      lon: locationData ? locationData.lon : '',
+      photoBase64: capturedPhoto,
+      comment: commentField.value.trim(),
+      specialReason: specialShiftReason(),
+      isNightShift: isNightShift
+    };
+
+    google.script.run
+      .withSuccessHandler(onSubmitSuccess)
+      .withFailureHandler(onSubmitError)
+      .logShiftEvent(payload);
+  });
+
+  function onSubmitSuccess(result) {
+    if (result.success) {
+      const overtimeNote = result.overtime ? ' Отмечено как переработка.' : '';
+      log(statusEl.innerHTML.replace(/<div><span class="spinner">.*?<\/div>/, '') +
+        `<div class="success">Готово, данные записаны.${overtimeNote}</div>`);
+    } else {
+      onSubmitError({ message: result.error });
+    }
+  }
+
+  function onSubmitError(err) {
+    log(statusEl.innerHTML.replace(/<div><span class="spinner">.*?<\/div>/, '') +
+      `<div class="error-msg">Ошибка отправки: ${err.message}. Попробуйте ещё раз.</div>`);
+    submitBtn.disabled = false;
+    retakeBtn.disabled = false;
+  }
+</script>
+
+</body>
+</html>
