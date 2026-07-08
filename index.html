@@ -148,7 +148,7 @@
 </div>
 
 <script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiH-d_vxz-rgTOAa4FEi8kJuuRhR9kPr5fS87FluP88hu1sKR4StK7k56rouA6bDs/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN5VZ5pn97fpcD9d38QfFritTVRTDaZSUJ-9IFi8rQPfbTyck3iTABNLQoZOG07tZi/exec';
 
   const employeeSelect = document.getElementById('employee');
   const startBtn = document.getElementById('startBtn');
@@ -174,25 +174,30 @@
   let locationData = null;
   let capturedPhoto = null;
 
-  fetch(SCRIPT_URL + '?action=employees')
-    .then(r => r.json())
-    .then(data => {
-      employeeSelect.innerHTML = '<option value="">Выбрать…</option>';
-      if (data.success && data.employees.length) {
-        data.employees.forEach(emp => {
-          const opt = document.createElement('option');
-          opt.value = JSON.stringify({ fio: emp.fio, dolzh: emp.dolzh, dept: emp.dept });
-          opt.textContent = emp.display;
-          employeeSelect.appendChild(opt);
-        });
-      } else {
-        employeeSelect.innerHTML = '<option value="">Список пуст — проверьте вкладку "Сотрудники"</option>';
-      }
-    })
-    .catch(err => {
+  // Загрузка списка сотрудников через JSONP (работает в любом браузере, без CORS)
+  window.onEmployeesLoaded = function(data) {
+    employeeSelect.innerHTML = '<option value="">Выбрать…</option>';
+    if (data.success && data.employees.length) {
+      data.employees.forEach(emp => {
+        const opt = document.createElement('option');
+        opt.value = JSON.stringify({ fio: emp.fio, dolzh: emp.dolzh, dept: emp.dept });
+        opt.textContent = emp.display;
+        employeeSelect.appendChild(opt);
+      });
+    } else {
+      employeeSelect.innerHTML = '<option value="">Список пуст — проверьте вкладку "Сотрудники"</option>';
+    }
+  };
+
+  (function loadEmployees() {
+    const s = document.createElement('script');
+    s.src = SCRIPT_URL + '?action=employees&callback=onEmployeesLoaded&_=' + Date.now();
+    s.onerror = function() {
       employeeSelect.innerHTML = '<option value="">Ошибка загрузки списка</option>';
       log('<div class="error-msg">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
-    });
+    };
+    document.body.appendChild(s);
+  })();
 
   function log(html) {
     statusEl.innerHTML = html;
@@ -314,7 +319,10 @@
 
     const empData = JSON.parse(employeeSelect.value);
 
+    const clientId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+
     const payload = {
+      clientId: clientId,
       dept: empData.dept,
       fio: empData.fio,
       dolzh: empData.dolzh,
@@ -328,31 +336,57 @@
       isNightShift: isNightShift
     };
 
+    // Отправляем в режиме no-cors: браузер не читает ответ, но запрос доходит до сервера.
+    // Доставку проверяем отдельным JSONP-запросом (?action=check).
     fetch(SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     })
-      .then(r => r.json())
-      .then(result => {
-        const sendingRow = document.getElementById('sendingRow');
-        if (sendingRow) sendingRow.remove();
-        if (result.success) {
-          const overtimeNote = result.overtime ? ' Отмечено как переработка.' : '';
-          log(statusEl.innerHTML + `<div class="success">Готово, данные записаны.${overtimeNote}</div>`);
+      .then(() => { checkDelivery(clientId, 0); })
+      .catch(() => { checkDelivery(clientId, 0); });
+
+    function checkDelivery(id, attempt) {
+      if (attempt >= 8) {
+        finishSending(null);
+        return;
+      }
+      const cbName = 'onCheck_' + attempt;
+      window[cbName] = function(data) {
+        delete window[cbName];
+        if (data.found) {
+          finishSending(data.result);
         } else {
-          log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
-          submitBtn.disabled = false;
-          retakeBtn.disabled = false;
+          setTimeout(() => checkDelivery(id, attempt + 1), 2000);
         }
-      })
-      .catch(err => {
-        const sendingRow = document.getElementById('sendingRow');
-        if (sendingRow) sendingRow.remove();
-        log(statusEl.innerHTML + `<div class="error-msg">Ошибка отправки: ${err.message}. Попробуйте ещё раз.</div>`);
+      };
+      const s = document.createElement('script');
+      s.src = SCRIPT_URL + '?action=check&id=' + encodeURIComponent(id) + '&callback=' + cbName + '&_=' + Date.now();
+      s.onerror = function() {
+        delete window[cbName];
+        setTimeout(() => checkDelivery(id, attempt + 1), 2000);
+      };
+      document.body.appendChild(s);
+    }
+
+    function finishSending(result) {
+      const sendingRow = document.getElementById('sendingRow');
+      if (sendingRow) sendingRow.remove();
+
+      if (result && result.success) {
+        const overtimeNote = result.overtime ? ' Отмечено как переработка.' : '';
+        log(statusEl.innerHTML + `<div class="success">Готово, данные записаны.${overtimeNote}</div>`);
+      } else if (result && !result.success) {
+        log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
-      });
+      } else {
+        log(statusEl.innerHTML + `<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
+        submitBtn.disabled = false;
+        retakeBtn.disabled = false;
+      }
+    }
   });
 </script>
 
