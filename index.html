@@ -191,7 +191,7 @@
     })
     .catch(err => {
       employeeSelect.innerHTML = '<option value="">Ошибка загрузки списка</option>';
-      log('<div class="error-msg">Не удалось загрузить список сотрудников. Проверьте подключение к интернету и обновите страницу.</div>');
+      log('<div class="error-msg">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
     });
 
   function log(html) {
@@ -349,7 +349,7 @@
       .catch(err => {
         const sendingRow = document.getElementById('sendingRow');
         if (sendingRow) sendingRow.remove();
-        log(statusEl.innerHTML + `<div class="error-msg">Ошибка отправки: ${err.message}. Проверьте интернет и попробуйте ещё раз.</div>`);
+        log(statusEl.innerHTML + `<div class="error-msg">Ошибка отправки: ${err.message}. Попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
       });
