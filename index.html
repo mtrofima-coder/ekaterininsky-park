@@ -41,14 +41,30 @@
     margin: 0 0 36px; letter-spacing: -0.01em;
   }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
-  select {
-    width: 100%; padding: 14px 16px; border: none; border-bottom: 1.5px solid var(--ink);
+
+  .search-box { position: relative; margin-bottom: 32px; }
+  #employeeSearch {
+    width: 100%; padding: 14px 4px; border: none; border-bottom: 1.5px solid var(--ink);
     background: transparent; color: var(--ink); font-family: 'Inter', sans-serif;
-    font-size: 16px; font-weight: 500; margin-bottom: 32px; appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230a0a0a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 4px center;
+    font-size: 16px; font-weight: 500;
   }
-  select:focus { outline: none; }
+  #employeeSearch:focus { outline: none; }
+  #employeeSearch::placeholder { color: var(--muted); font-weight: 400; }
+  #employeeSearch:disabled { color: var(--muted); }
+  .search-results {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+    background: var(--paper); border: 1.5px solid var(--ink); border-top: none;
+    max-height: 260px; overflow-y: auto; display: none;
+  }
+  .search-results.show { display: block; }
+  .search-item {
+    padding: 12px 14px; font-size: 14px; cursor: pointer;
+    border-bottom: 1px solid var(--line);
+  }
+  .search-item:last-child { border-bottom: none; }
+  .search-item:hover, .search-item:active { background: #f2f2f2; }
+  .search-empty { padding: 12px 14px; font-size: 13px; color: var(--muted); }
+
   .btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
   button {
     border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
@@ -69,41 +85,47 @@
   .btn-solid { background: var(--ink); color: var(--paper); }
   .btn-solid:hover { background: #2a2a2a; }
   button:not(.btn-solid):not(.btn-outline-muted):hover { background: var(--ink); color: var(--paper); }
-  button:disabled { opacity: 0.3 !important; cursor: not-allowed; animation: none; transform: none; }
+  button:disabled { opacity: 0.3 !important; cursor: not-allowed; }
   @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  video, canvas, img.preview { width: 100%; margin-top: 20px; display: none; background: #000; animation: fadeUp 0.4s ease; }
-  .btn-capture { width: 100%; margin-top: 14px; display: none; }
-  .btn-capture.show { display: block; animation: fadeUp 0.4s ease; }
+  video, canvas, img.preview { width: 100%; margin-top: 20px; display: none; background: #000; animation: fadeUp 0.4s ease forwards; }
+  canvas { display: none !important; }
+
+  .btn-capture {
+    width: 100%; margin-top: 14px; display: none;
+    background: var(--ink); color: var(--paper);
+  }
+  .btn-capture.show {
+    display: block;
+    opacity: 1 !important; transform: none !important; animation: fadeUp 0.4s ease forwards;
+  }
+  .btn-capture:hover { background: #2a2a2a; }
+
   textarea {
     width: 100%; padding: 12px 0; border: none; border-bottom: 1.5px solid var(--line);
     background: transparent; color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
-    resize: none; margin-top: 18px; min-height: 60px; display: none; animation: fadeUp 0.4s ease;
+    resize: none; margin-top: 18px; min-height: 60px; display: none;
   }
-  textarea.show { display: block; }
+  textarea.show { display: block; animation: fadeUp 0.4s ease forwards; }
   textarea:focus { outline: none; border-bottom-color: var(--ink); }
   .field-note { font-size: 11px; color: var(--muted); margin-top: 6px; display: none; }
   .field-note.show { display: block; }
   .field-note.error { color: #c0392b; }
   .retake-row { display: none; margin-top: 14px; }
-  .retake-row.show { display: flex; animation: fadeUp 0.4s ease; }
+  .retake-row.show { display: flex; animation: fadeUp 0.4s ease forwards; }
   .status {
     margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);
     font-size: 13px; color: var(--muted); line-height: 1.8; display: none;
   }
-  .status.show { display: block; animation: fadeUp 0.4s ease; }
+  .status.show { display: block; animation: fadeUp 0.4s ease forwards; }
   .status b { color: var(--ink); font-weight: 600; }
-  .tag {
-    display: inline-block; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
-    padding: 2px 7px; border: 1px solid var(--ink); margin-left: 6px; font-weight: 600;
-  }
-  .tag.pending { border-color: var(--muted); color: var(--muted); }
   .success { margin-top: 14px; font-size: 13px; font-weight: 600; }
   .error-msg { margin-top: 14px; font-size: 13px; font-weight: 600; color: #c0392b; }
   .hidden { display: none !important; }
   .spinner {
-    display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line);
-    border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle;
+    display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line);
+    border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite;
+    margin-right: 6px; vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -114,10 +136,11 @@
   <div class="eyebrow">Учёт рабочего времени</div>
   <h1>Екатерининский парк</h1>
 
-  <label for="employee">ФИО</label>
-  <select id="employee">
-    <option value="">Загружаем список…</option>
-  </select>
+  <label for="employeeSearch">ФИО</label>
+  <div class="search-box">
+    <input type="text" id="employeeSearch" placeholder="Загружаем список…" autocomplete="off" disabled>
+    <div class="search-results" id="searchResults"></div>
+  </div>
 
   <div id="actionButtons">
     <div class="btn-row">
@@ -149,8 +172,10 @@
 
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN5VZ5pn97fpcD9d38QfFritTVRTDaZSUJ-9IFi8rQPfbTyck3iTABNLQoZOG07tZi/exec';
+  const PHOTO_MAX_WIDTH = 1000; // сжатие фото для быстрой отправки
 
-  const employeeSelect = document.getElementById('employee');
+  const searchInput = document.getElementById('employeeSearch');
+  const searchResults = document.getElementById('searchResults');
   const startBtn = document.getElementById('startBtn');
   const endBtn = document.getElementById('endBtn');
   const nightStartBtn = document.getElementById('nightStartBtn');
@@ -168,24 +193,28 @@
   const commentField = document.getElementById('comment');
   const commentNote = document.getElementById('commentNote');
 
+  let EMPLOYEES = [];
+  let selectedEmp = null;
   let stream = null;
   let shiftType = null;
   let isNightShift = false;
-  let locationData = null;
+  let locationData = null;   // { lat, lon, address }
+  let locationFailed = false;
   let capturedPhoto = null;
 
-  // Загрузка списка сотрудников через JSONP (работает в любом браузере, без CORS)
+  function log(html) {
+    statusEl.innerHTML = html;
+    statusEl.classList.add('show');
+  }
+
+  // === Загрузка списка сотрудников (JSONP) ===
   window.onEmployeesLoaded = function(data) {
-    employeeSelect.innerHTML = '<option value="">Выбрать…</option>';
     if (data.success && data.employees.length) {
-      data.employees.forEach(emp => {
-        const opt = document.createElement('option');
-        opt.value = JSON.stringify({ fio: emp.fio, dolzh: emp.dolzh, dept: emp.dept });
-        opt.textContent = emp.display;
-        employeeSelect.appendChild(opt);
-      });
+      EMPLOYEES = data.employees;
+      searchInput.disabled = false;
+      searchInput.placeholder = 'Начните вводить фамилию…';
     } else {
-      employeeSelect.innerHTML = '<option value="">Список пуст — проверьте вкладку "Сотрудники"</option>';
+      searchInput.placeholder = 'Список пуст — проверьте вкладку "Сотрудники"';
     }
   };
 
@@ -193,17 +222,47 @@
     const s = document.createElement('script');
     s.src = SCRIPT_URL + '?action=employees&callback=onEmployeesLoaded&_=' + Date.now();
     s.onerror = function() {
-      employeeSelect.innerHTML = '<option value="">Ошибка загрузки списка</option>';
+      searchInput.placeholder = 'Ошибка загрузки списка';
       log('<div class="error-msg">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
     };
     document.body.appendChild(s);
   })();
 
-  function log(html) {
-    statusEl.innerHTML = html;
-    statusEl.classList.add('show');
-  }
+  // === Поиск по ФИО ===
+  searchInput.addEventListener('input', function() {
+    selectedEmp = null;
+    const q = searchInput.value.trim().toLowerCase();
+    if (q.length < 1) {
+      searchResults.classList.remove('show');
+      return;
+    }
+    const matches = EMPLOYEES.filter(e => e.display.toLowerCase().includes(q)).slice(0, 8);
+    searchResults.innerHTML = '';
+    if (matches.length) {
+      matches.forEach(emp => {
+        const item = document.createElement('div');
+        item.className = 'search-item';
+        item.textContent = emp.display;
+        item.addEventListener('click', () => {
+          selectedEmp = emp;
+          searchInput.value = emp.display;
+          searchResults.classList.remove('show');
+        });
+        searchResults.appendChild(item);
+      });
+    } else {
+      searchResults.innerHTML = '<div class="search-empty">Никого не нашли — проверьте написание</div>';
+    }
+    searchResults.classList.add('show');
+  });
 
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-box')) {
+      searchResults.classList.remove('show');
+    }
+  });
+
+  // === Специальные условия ===
   function isWeekend(date) {
     const day = date.getDay();
     return day === 0 || day === 6;
@@ -214,47 +273,110 @@
     return null;
   }
 
+  // === Геолокация (обязательная) + адрес словами ===
+  function requestLocation() {
+    locationData = null;
+    locationFailed = false;
+    updateStatus();
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        locationData = {
+          lat: pos.coords.latitude.toFixed(5),
+          lon: pos.coords.longitude.toFixed(5),
+          address: ''
+        };
+        updateStatus();
+        updateSubmitState();
+        fetchAddress(locationData.lat, locationData.lon);
+      },
+      (err) => {
+        locationFailed = true;
+        updateStatus();
+        updateSubmitState();
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
+    );
+  }
+
+  function fetchAddress(lat, lon) {
+    fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&accept-language=ru&zoom=17')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.address) {
+          const a = data.address;
+          const parts = [];
+          if (a.road) parts.push(a.road + (a.house_number ? ', ' + a.house_number : ''));
+          else if (a.pedestrian) parts.push(a.pedestrian);
+          else if (a.suburb) parts.push(a.suburb);
+          if (a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
+          if (parts.length && locationData) {
+            locationData.address = parts.join(', ');
+            updateStatus();
+          }
+        }
+      })
+      .catch(() => {}); // адрес — опционально, координаты уже есть
+  }
+
+  function updateSubmitState() {
+    // Отправка разрешена только когда есть координаты
+    if (retakeRow.classList.contains('show')) {
+      submitBtn.disabled = !locationData;
+    }
+  }
+
+  // === Камера ===
   async function startCamera() {
-    if (!employeeSelect.value) {
-      alert('Сначала выберите ФИО');
+    if (!selectedEmp) {
+      alert('Сначала выберите ФИО из списка');
       return;
     }
     actionButtons.classList.add('hidden');
+    searchInput.disabled = true;
     video.style.display = 'block';
     captureBtn.classList.add('show');
+    captureBtn.disabled = true;
     eyebrowEl.textContent = shiftType === 'start' ? 'Открываем смену' : 'Закрываем смену';
-    log('Запрашиваем доступ к камере и геолокации…');
+    updateStatus('<div><span class="spinner"></span>Открываем камеру…</div>');
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
       video.srcObject = stream;
+      video.onplaying = function() {
+        captureBtn.disabled = false;
+        updateStatus();
+      };
     } catch (err) {
-      log('Не удалось получить доступ к камере: ' + err.message);
+      log('<div class="error-msg">Не удалось получить доступ к камере: ' + err.message + '</div>');
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        locationData = { lat: pos.coords.latitude.toFixed(5), lon: pos.coords.longitude.toFixed(5) };
-        updateStatus();
-      },
-      () => { locationData = null; updateStatus(); }
-    );
-
-    updateStatus();
+    requestLocation();
   }
 
-  function updateStatus() {
+  function updateStatus(extraHtml) {
+    if (!selectedEmp) return;
     const time = new Date().toLocaleString('ru-RU');
-    const loc = locationData ? `${locationData.lat}, ${locationData.lon}` : null;
-    const empData = JSON.parse(employeeSelect.value);
+
+    let locLine;
+    if (locationData) {
+      locLine = locationData.address
+        ? locationData.address + ' (' + locationData.lat + ', ' + locationData.lon + ')'
+        : locationData.lat + ', ' + locationData.lon;
+    } else if (locationFailed) {
+      locLine = '<span class="error-msg" style="margin:0">не определена — без геолокации отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</span>';
+    } else {
+      locLine = '<span class="spinner"></span>определяем местоположение…';
+    }
 
     log(`
-      <div><b>Сотрудник</b> — ${empData.fio}${empData.dolzh ? ' — ' + empData.dolzh : ''}</div>
-      <div><b>Отдел</b> — ${empData.dept}</div>
+      <div><b>Сотрудник</b> — ${selectedEmp.fio}${selectedEmp.dolzh ? ' — ' + selectedEmp.dolzh : ''}</div>
+      <div><b>Отдел</b> — ${selectedEmp.dept}</div>
       <div><b>Событие</b> — ${shiftType === 'start' ? 'Начало смены' : 'Конец смены'}${isNightShift ? ' (ночная)' : ''}</div>
       <div><b>Время</b> — ${time}</div>
-      <div><b>Локация</b> — ${loc ?? 'получаем…'} <span class="tag ${loc ? '' : 'pending'}">${loc ? 'OK' : 'ожидание'}</span></div>
+      <div><b>Локация</b> — ${locLine}</div>
+      ${extraHtml || ''}
     `);
   }
 
@@ -263,20 +385,27 @@
   nightStartBtn.addEventListener('click', () => { shiftType = 'start'; isNightShift = true; startCamera(); });
   nightEndBtn.addEventListener('click', () => { shiftType = 'end'; isNightShift = true; startCamera(); });
 
+  // === Снимок (со сжатием) ===
   captureBtn.addEventListener('click', () => {
+    const srcW = video.videoWidth;
+    const srcH = video.videoHeight;
+    const scale = Math.min(1, PHOTO_MAX_WIDTH / srcW);
+    const w = Math.round(srcW * scale);
+    const h = Math.round(srcH * scale);
+
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, 0, 0, w, h);
 
     const timeStr = new Date().toLocaleString('ru-RU');
-    ctx.font = `${Math.floor(canvas.width / 22)}px Inter, sans-serif`;
+    ctx.font = `${Math.floor(w / 22)}px Inter, sans-serif`;
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(0, canvas.height - canvas.width / 9, canvas.width, canvas.width / 9);
+    ctx.fillRect(0, h - w / 9, w, w / 9);
     ctx.fillStyle = '#fff';
-    ctx.fillText(timeStr, 12, canvas.height - 14);
+    ctx.fillText(timeStr, 12, h - 14);
 
-    capturedPhoto = canvas.toDataURL('image/jpeg', 0.85);
+    capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
     preview.src = capturedPhoto;
     preview.style.display = 'block';
     video.style.display = 'none';
@@ -294,6 +423,7 @@
 
     stream.getTracks().forEach(t => t.stop());
     updateStatus();
+    updateSubmitState();
   });
 
   retakeBtn.addEventListener('click', () => {
@@ -302,7 +432,13 @@
     startCamera();
   });
 
+  // === Отправка ===
   submitBtn.addEventListener('click', () => {
+    if (!locationData) {
+      updateStatus();
+      return;
+    }
+
     if (commentField.dataset.required === 'true') {
       const text = commentField.value.trim();
       if (text.length < 10) {
@@ -315,29 +451,26 @@
 
     submitBtn.disabled = true;
     retakeBtn.disabled = true;
-    log(statusEl.innerHTML + `<div id="sendingRow"><span class="spinner"></span>Отправляем данные…</div>`);
-
-    const empData = JSON.parse(employeeSelect.value);
+    updateStatus('<div id="sendingRow"><span class="spinner"></span>Отправляем данные…</div>');
 
     const clientId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 
     const payload = {
       clientId: clientId,
-      dept: empData.dept,
-      fio: empData.fio,
-      dolzh: empData.dolzh,
+      dept: selectedEmp.dept,
+      fio: selectedEmp.fio,
+      dolzh: selectedEmp.dolzh,
       eventType: shiftType,
       time: new Date().toISOString(),
-      lat: locationData ? locationData.lat : '',
-      lon: locationData ? locationData.lon : '',
+      lat: locationData.lat,
+      lon: locationData.lon,
+      address: locationData.address || '',
       photoBase64: capturedPhoto,
       comment: commentField.value.trim(),
       specialReason: specialShiftReason(),
       isNightShift: isNightShift
     };
 
-    // Отправляем в режиме no-cors: браузер не читает ответ, но запрос доходит до сервера.
-    // Доставку проверяем отдельным JSONP-запросом (?action=check).
     fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
