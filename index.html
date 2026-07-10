@@ -88,43 +88,63 @@
   button:disabled { opacity: 0.3 !important; cursor: not-allowed; }
   @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  video, canvas, img.preview { width: 100%; margin-top: 20px; display: none; background: #000; animation: fadeUp 0.4s ease forwards; }
+  video, canvas, img.preview { width: 100%; margin-top: 20px; display: none; background: #000; }
   canvas { display: none !important; }
 
+  /* Рабочие кнопки процесса — всегда полностью видимы, без анимаций появления */
   .btn-capture {
     width: 100%; margin-top: 14px; display: none;
     background: var(--ink); color: var(--paper);
+    opacity: 1 !important; transform: none !important; animation: none !important;
   }
-  .btn-capture.show {
-    display: block;
-    opacity: 1 !important; transform: none !important; animation: fadeUp 0.4s ease forwards;
-  }
+  .btn-capture.show { display: block; }
   .btn-capture:hover { background: #2a2a2a; }
+  .retake-row { display: none; margin-top: 14px; }
+  .retake-row.show { display: flex; }
+  .retake-row button {
+    opacity: 1 !important; transform: none !important; animation: none !important;
+  }
 
   textarea {
     width: 100%; padding: 12px 0; border: none; border-bottom: 1.5px solid var(--line);
     background: transparent; color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
     resize: none; margin-top: 18px; min-height: 60px; display: none;
   }
-  textarea.show { display: block; animation: fadeUp 0.4s ease forwards; }
+  textarea.show { display: block; }
   textarea:focus { outline: none; border-bottom-color: var(--ink); }
-  .field-note { font-size: 11px; color: var(--muted); margin-top: 6px; display: none; }
+  textarea::placeholder { font-weight: 700; color: #444; }
+  .field-note { font-size: 11px; color: var(--muted); margin-top: 6px; display: none; font-weight: 700; }
   .field-note.show { display: block; }
   .field-note.error { color: #c0392b; }
-  .retake-row { display: none; margin-top: 14px; }
-  .retake-row.show { display: flex; animation: fadeUp 0.4s ease forwards; }
   .status {
     margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);
     font-size: 13px; color: var(--muted); line-height: 1.8; display: none;
   }
-  .status.show { display: block; animation: fadeUp 0.4s ease forwards; }
+  .status.show { display: block; }
   .status b { color: var(--ink); font-weight: 600; }
   .success { margin-top: 14px; font-size: 13px; font-weight: 600; }
   .error-msg { margin-top: 14px; font-size: 13px; font-weight: 600; color: #c0392b; }
   .hidden { display: none !important; }
+  .loading-big { color: #c0392b; font-weight: 700; font-size: 15px; line-height: 1.5; }
+  .notice {
+    background: #fff7e6; border: 1.5px solid #e0a800; color: #7a5c00;
+    font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .final-big {
+    font-family: 'Manrope', sans-serif; font-size: 30px; font-weight: 700;
+    color: var(--ink); margin-top: 20px; line-height: 1.2;
+  }
+  .final-sub {
+    font-size: 15px; font-weight: 700; color: #c0392b; margin-top: 8px;
+  }
+  .version-tag {
+    margin-top: 32px; font-size: 10px; color: #c8c8c8; text-align: center;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
   .spinner {
     display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line);
-    border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite;
+    border-top-color: #c0392b; border-radius: 50%; animation: spin 0.7s linear infinite;
     margin-right: 6px; vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -135,6 +155,10 @@
 <div class="wrap">
   <div class="eyebrow">Учёт рабочего времени</div>
   <h1>Екатерининский парк</h1>
+
+  <div class="notice" id="vpnNotice">Перед отметкой: выключите VPN и включите геолокацию на телефоне</div>
+
+  <div class="loading-big" id="loadBanner"><span class="spinner"></span>Ожидайте, информация загружается…</div>
 
   <label for="employeeSearch">ФИО</label>
   <div class="search-box">
@@ -168,11 +192,13 @@
   </div>
 
   <div class="status" id="status"></div>
+
+  <div class="version-tag">версия 8</div>
 </div>
 
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN5VZ5pn97fpcD9d38QfFritTVRTDaZSUJ-9IFi8rQPfbTyck3iTABNLQoZOG07tZi/exec';
-  const PHOTO_MAX_WIDTH = 1000; // сжатие фото для быстрой отправки
+  const PHOTO_MAX_WIDTH = 1000;
 
   const searchInput = document.getElementById('employeeSearch');
   const searchResults = document.getElementById('searchResults');
@@ -198,7 +224,7 @@
   let stream = null;
   let shiftType = null;
   let isNightShift = false;
-  let locationData = null;   // { lat, lon, address }
+  let locationData = null;
   let locationFailed = false;
   let capturedPhoto = null;
 
@@ -207,8 +233,8 @@
     statusEl.classList.add('show');
   }
 
-  // === Загрузка списка сотрудников (JSONP) ===
   window.onEmployeesLoaded = function(data) {
+    document.getElementById('loadBanner').style.display = 'none';
     if (data.success && data.employees.length) {
       EMPLOYEES = data.employees;
       searchInput.disabled = false;
@@ -222,13 +248,13 @@
     const s = document.createElement('script');
     s.src = SCRIPT_URL + '?action=employees&callback=onEmployeesLoaded&_=' + Date.now();
     s.onerror = function() {
+      document.getElementById('loadBanner').style.display = 'none';
       searchInput.placeholder = 'Ошибка загрузки списка';
-      log('<div class="error-msg">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
+      log('<div class="loading-big">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
     };
     document.body.appendChild(s);
   })();
 
-  // === Поиск по ФИО ===
   searchInput.addEventListener('input', function() {
     selectedEmp = null;
     const q = searchInput.value.trim().toLowerCase();
@@ -262,7 +288,6 @@
     }
   });
 
-  // === Специальные условия ===
   function isWeekend(date) {
     const day = date.getDay();
     return day === 0 || day === 6;
@@ -273,7 +298,6 @@
     return null;
   }
 
-  // === Геолокация (обязательная) + адрес словами ===
   function requestLocation() {
     locationData = null;
     locationFailed = false;
@@ -287,19 +311,18 @@
           address: ''
         };
         updateStatus();
-        updateSubmitState();
-        fetchAddress(locationData.lat, locationData.lon);
+        fetchAddress(locationData.lat, locationData.lon, 0);
       },
       (err) => {
         locationFailed = true;
         updateStatus();
-        updateSubmitState();
       },
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
     );
   }
 
-  function fetchAddress(lat, lon) {
+  function fetchAddress(lat, lon, attempt) {
+    attempt = attempt || 0;
     fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&accept-language=ru&zoom=17')
       .then(r => r.json())
       .then(data => {
@@ -313,20 +336,16 @@
           if (parts.length && locationData) {
             locationData.address = parts.join(', ');
             updateStatus();
+            return;
           }
         }
+        if (attempt < 3) setTimeout(() => fetchAddress(lat, lon, attempt + 1), 1500);
       })
-      .catch(() => {}); // адрес — опционально, координаты уже есть
+      .catch(() => {
+        if (attempt < 3) setTimeout(() => fetchAddress(lat, lon, attempt + 1), 1500);
+      });
   }
 
-  function updateSubmitState() {
-    // Отправка разрешена только когда есть координаты
-    if (retakeRow.classList.contains('show')) {
-      submitBtn.disabled = !locationData;
-    }
-  }
-
-  // === Камера ===
   async function startCamera() {
     if (!selectedEmp) {
       alert('Сначала выберите ФИО из списка');
@@ -338,7 +357,7 @@
     captureBtn.classList.add('show');
     captureBtn.disabled = true;
     eyebrowEl.textContent = shiftType === 'start' ? 'Открываем смену' : 'Закрываем смену';
-    updateStatus('<div><span class="spinner"></span>Открываем камеру…</div>');
+    updateStatus('<div class="loading-big"><span class="spinner"></span>Ожидайте, открываем камеру…</div>');
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
@@ -348,7 +367,7 @@
         updateStatus();
       };
     } catch (err) {
-      log('<div class="error-msg">Не удалось получить доступ к камере: ' + err.message + '</div>');
+      log('<div class="loading-big">Не удалось получить доступ к камере: ' + err.message + '</div>');
       return;
     }
 
@@ -365,9 +384,9 @@
         ? locationData.address + ' (' + locationData.lat + ', ' + locationData.lon + ')'
         : locationData.lat + ', ' + locationData.lon;
     } else if (locationFailed) {
-      locLine = '<span class="error-msg" style="margin:0">не определена — без геолокации отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</span>';
+      locLine = '<span class="loading-big">не определена — без геолокации отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</span>';
     } else {
-      locLine = '<span class="spinner"></span>определяем местоположение…';
+      locLine = '<span class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение…</span>';
     }
 
     log(`
@@ -385,7 +404,6 @@
   nightStartBtn.addEventListener('click', () => { shiftType = 'start'; isNightShift = true; startCamera(); });
   nightEndBtn.addEventListener('click', () => { shiftType = 'end'; isNightShift = true; startCamera(); });
 
-  // === Снимок (со сжатием) ===
   captureBtn.addEventListener('click', () => {
     const srcW = video.videoWidth;
     const srcH = video.videoHeight;
@@ -399,11 +417,14 @@
     ctx.drawImage(video, 0, 0, w, h);
 
     const timeStr = new Date().toLocaleString('ru-RU');
-    ctx.font = `${Math.floor(w / 22)}px Inter, sans-serif`;
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(0, h - w / 9, w, w / 9);
+    const bandH = Math.floor(w / 8);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, h / 2 - bandH / 2, w, bandH);
+    ctx.font = `bold ${Math.floor(w / 18)}px Inter, sans-serif`;
     ctx.fillStyle = '#fff';
-    ctx.fillText(timeStr, 12, h - 14);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(timeStr, w / 2, h / 2);
 
     capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
     preview.src = capturedPhoto;
@@ -417,13 +438,14 @@
       if (reason) {
         commentField.classList.add('show');
         commentField.dataset.required = 'true';
-        commentField.placeholder = `${reason} — опишите, что делали`;
+        commentField.placeholder = `${reason} — обязательно опишите, что делали`;
+        commentNote.classList.add('show');
+        commentNote.textContent = 'Обязательно заполните комментарий перед отправкой';
       }
     }
 
     stream.getTracks().forEach(t => t.stop());
     updateStatus();
-    updateSubmitState();
   });
 
   retakeBtn.addEventListener('click', () => {
@@ -432,10 +454,18 @@
     startCamera();
   });
 
-  // === Отправка ===
   submitBtn.addEventListener('click', () => {
+    if (!capturedPhoto) {
+      updateStatus('<div class="loading-big">Сначала сделайте снимок.</div>');
+      return;
+    }
     if (!locationData) {
-      updateStatus();
+      if (locationFailed) {
+        updateStatus('<div class="loading-big">Без геолокации отправить нельзя. Разрешите доступ к местоположению в настройках браузера и нажмите «Переснять».</div>');
+        requestLocation();
+      } else {
+        updateStatus('<div class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение… После этого нажмите «Отправить» ещё раз.</div>');
+      }
       return;
     }
 
@@ -451,7 +481,7 @@
 
     submitBtn.disabled = true;
     retakeBtn.disabled = true;
-    updateStatus('<div id="sendingRow"><span class="spinner"></span>Отправляем данные…</div>');
+    updateStatus('<div class="loading-big" id="sendingRow"><span class="spinner"></span>Ожидайте, отправляем данные…</div>');
 
     const clientId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 
@@ -509,13 +539,19 @@
 
       if (result && result.success) {
         const overtimeNote = result.overtime ? ' Отмечено как переработка.' : '';
-        log(statusEl.innerHTML + `<div class="success">Готово, данные записаны.${overtimeNote}</div>`);
+        let bigMsg;
+        if (shiftType === 'start') {
+          bigMsg = '<div class="final-big">✅ Смена открыта</div><div class="final-sub">Не забудьте закрыть её в конце рабочего дня!</div>';
+        } else {
+          bigMsg = '<div class="final-big">✅ Смена закрыта</div><div class="final-sub">Спасибо за работу!</div>';
+        }
+        log(statusEl.innerHTML + `<div class="success">Данные записаны.${overtimeNote}</div>` + bigMsg);
       } else if (result && !result.success) {
-        log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
+        log(statusEl.innerHTML + `<div class="loading-big">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
       } else {
-        log(statusEl.innerHTML + `<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
+        log(statusEl.innerHTML + `<div class="loading-big">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
       }
