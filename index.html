@@ -99,11 +99,6 @@
   }
   .btn-capture.show { display: block; }
   .btn-capture:hover { background: #2a2a2a; }
-  .retake-row { display: none; margin-top: 14px; }
-  .retake-row.show { display: flex; }
-  .retake-row button {
-    opacity: 1 !important; transform: none !important; animation: none !important;
-  }
 
   textarea {
     width: 100%; padding: 12px 0; border: none; border-bottom: 1.5px solid var(--line);
@@ -112,10 +107,14 @@
   }
   textarea.show { display: block; }
   textarea:focus { outline: none; border-bottom-color: var(--ink); }
-  textarea::placeholder { font-weight: 700; color: #444; }
-  .field-note { font-size: 11px; color: var(--muted); margin-top: 6px; display: none; font-weight: 700; }
+  .field-note { font-size: 11px; color: var(--muted); margin-top: 6px; display: none; }
   .field-note.show { display: block; }
   .field-note.error { color: #c0392b; }
+  .retake-row { display: none; margin-top: 14px; }
+  .retake-row.show { display: flex; }
+  .retake-row button {
+    opacity: 1 !important; transform: none !important; animation: none !important;
+  }
   .status {
     margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);
     font-size: 13px; color: var(--muted); line-height: 1.8; display: none;
@@ -125,11 +124,9 @@
   .success { margin-top: 14px; font-size: 13px; font-weight: 600; }
   .error-msg { margin-top: 14px; font-size: 13px; font-weight: 600; color: #c0392b; }
   .hidden { display: none !important; }
-  .loading-big { color: #c0392b; font-weight: 700; font-size: 15px; line-height: 1.5; }
-  .notice {
-    background: #fff7e6; border: 1.5px solid #e0a800; color: #7a5c00;
-    font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 20px;
-    line-height: 1.5;
+  .version-tag {
+    margin-top: 32px; font-size: 10px; color: #c8c8c8; text-align: center;
+    letter-spacing: 0.08em; text-transform: uppercase;
   }
   .final-big {
     font-family: 'Manrope', sans-serif; font-size: 30px; font-weight: 700;
@@ -138,13 +135,17 @@
   .final-sub {
     font-size: 15px; font-weight: 700; color: #c0392b; margin-top: 8px;
   }
-  .version-tag {
-    margin-top: 32px; font-size: 10px; color: #c8c8c8; text-align: center;
-    letter-spacing: 0.08em; text-transform: uppercase;
+  .notice {
+    background: #fff7e6; border: 1.5px solid #e0a800; color: #7a5c00;
+    font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 20px;
+    line-height: 1.5;
   }
+  .loading-big { color: #c0392b; font-weight: 700; font-size: 15px; line-height: 1.5; }
+  textarea::placeholder { font-weight: 700; color: #444; }
+  .field-note { font-weight: 700; }
   .spinner {
     display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line);
-    border-top-color: #c0392b; border-radius: 50%; animation: spin 0.7s linear infinite;
+    border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite;
     margin-right: 6px; vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -198,7 +199,7 @@
 
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN5VZ5pn97fpcD9d38QfFritTVRTDaZSUJ-9IFi8rQPfbTyck3iTABNLQoZOG07tZi/exec';
-  const PHOTO_MAX_WIDTH = 1000;
+  const PHOTO_MAX_WIDTH = 1000; // сжатие фото для быстрой отправки
 
   const searchInput = document.getElementById('employeeSearch');
   const searchResults = document.getElementById('searchResults');
@@ -224,7 +225,7 @@
   let stream = null;
   let shiftType = null;
   let isNightShift = false;
-  let locationData = null;
+  let locationData = null;   // { lat, lon, address }
   let locationFailed = false;
   let capturedPhoto = null;
 
@@ -233,6 +234,7 @@
     statusEl.classList.add('show');
   }
 
+  // === Загрузка списка сотрудников (JSONP) ===
   window.onEmployeesLoaded = function(data) {
     document.getElementById('loadBanner').style.display = 'none';
     if (data.success && data.employees.length) {
@@ -250,11 +252,12 @@
     s.onerror = function() {
       document.getElementById('loadBanner').style.display = 'none';
       searchInput.placeholder = 'Ошибка загрузки списка';
-      log('<div class="loading-big">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
+      log('<div class="error-msg">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
     };
     document.body.appendChild(s);
   })();
 
+  // === Поиск по ФИО ===
   searchInput.addEventListener('input', function() {
     selectedEmp = null;
     const q = searchInput.value.trim().toLowerCase();
@@ -288,6 +291,7 @@
     }
   });
 
+  // === Специальные условия ===
   function isWeekend(date) {
     const day = date.getDay();
     return day === 0 || day === 6;
@@ -298,6 +302,7 @@
     return null;
   }
 
+  // === Геолокация (обязательная) + адрес словами ===
   function requestLocation() {
     locationData = null;
     locationFailed = false;
@@ -311,11 +316,13 @@
           address: ''
         };
         updateStatus();
-        fetchAddress(locationData.lat, locationData.lon, 0);
+        updateSubmitState();
+        fetchAddress(locationData.lat, locationData.lon);
       },
       (err) => {
         locationFailed = true;
         updateStatus();
+        updateSubmitState();
       },
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
     );
@@ -346,6 +353,11 @@
       });
   }
 
+  function updateSubmitState() {
+    // Кнопка активна всегда; проверка локации происходит при нажатии с понятным сообщением
+  }
+
+  // === Камера ===
   async function startCamera() {
     if (!selectedEmp) {
       alert('Сначала выберите ФИО из списка');
@@ -367,7 +379,7 @@
         updateStatus();
       };
     } catch (err) {
-      log('<div class="loading-big">Не удалось получить доступ к камере: ' + err.message + '</div>');
+      log('<div class="error-msg">Не удалось получить доступ к камере: ' + err.message + '</div>');
       return;
     }
 
@@ -384,7 +396,7 @@
         ? locationData.address + ' (' + locationData.lat + ', ' + locationData.lon + ')'
         : locationData.lat + ', ' + locationData.lon;
     } else if (locationFailed) {
-      locLine = '<span class="loading-big">не определена — без геолокации отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</span>';
+      locLine = '<span class="error-msg" style="margin:0">не определена — без геолокации отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</span>';
     } else {
       locLine = '<span class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение…</span>';
     }
@@ -404,6 +416,7 @@
   nightStartBtn.addEventListener('click', () => { shiftType = 'start'; isNightShift = true; startCamera(); });
   nightEndBtn.addEventListener('click', () => { shiftType = 'end'; isNightShift = true; startCamera(); });
 
+  // === Снимок (со сжатием) ===
   captureBtn.addEventListener('click', () => {
     const srcW = video.videoWidth;
     const srcH = video.videoHeight;
@@ -446,6 +459,7 @@
 
     stream.getTracks().forEach(t => t.stop());
     updateStatus();
+    updateSubmitState();
   });
 
   retakeBtn.addEventListener('click', () => {
@@ -454,6 +468,7 @@
     startCamera();
   });
 
+  // === Отправка ===
   submitBtn.addEventListener('click', () => {
     if (!capturedPhoto) {
       updateStatus('<div class="loading-big">Сначала сделайте снимок.</div>');
@@ -547,11 +562,11 @@
         }
         log(statusEl.innerHTML + `<div class="success">Данные записаны.${overtimeNote}</div>` + bigMsg);
       } else if (result && !result.success) {
-        log(statusEl.innerHTML + `<div class="loading-big">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
+        log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
       } else {
-        log(statusEl.innerHTML + `<div class="loading-big">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
+        log(statusEl.innerHTML + `<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
       }
