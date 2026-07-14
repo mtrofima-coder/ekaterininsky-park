@@ -6,7 +6,7 @@
 <title>Екатерининский парк — Учёт смен</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #0a0a0a;
@@ -19,7 +19,7 @@
     margin: 0;
     background: var(--paper);
     color: var(--ink);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Geist', 'Golos Text', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   body {
@@ -35,17 +35,17 @@
     color: var(--muted); margin-bottom: 10px; font-weight: 500;
   }
   h1 {
-    font-family: 'Manrope', sans-serif; font-style: normal;
-    font-size: 40px; line-height: 1.05; font-weight: 500;
+    font-family: 'Geist', 'Golos Text', sans-serif; font-style: normal;
+    font-size: 38px; line-height: 1.08; font-weight: 650;
     color: var(--ink);
-    margin: 0 0 36px; letter-spacing: -0.01em;
+    margin: 0 0 32px; letter-spacing: -0.025em;
   }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
 
   .search-box { position: relative; margin-bottom: 32px; }
   #employeeSearch {
     width: 100%; padding: 14px 4px; border: none; border-bottom: 1.5px solid var(--ink);
-    background: transparent; color: var(--ink); font-family: 'Inter', sans-serif;
+    background: transparent; color: var(--ink); font-family: 'Geist', 'Golos Text', sans-serif;
     font-size: 16px; font-weight: 500;
   }
   #employeeSearch:focus { outline: none; }
@@ -68,9 +68,11 @@
   .btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
   button {
     border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
-    padding: 16px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
-    cursor: pointer; flex: 1; transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    padding: 16px; font-family: 'Geist', 'Golos Text', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; flex: 1;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
     opacity: 0; transform: translateX(-16px); animation: slideIn 0.5s ease forwards;
+    -webkit-tap-highlight-color: transparent;
   }
   button:active { transform: scale(0.97); }
   #startBtn { animation-delay: 0.15s; }
@@ -102,7 +104,7 @@
 
   textarea {
     width: 100%; padding: 12px 0; border: none; border-bottom: 1.5px solid var(--line);
-    background: transparent; color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
+    background: transparent; color: var(--ink); font-family: 'Geist', 'Golos Text', sans-serif; font-size: 14px;
     resize: none; margin-top: 18px; min-height: 60px; display: none;
   }
   textarea.show { display: block; }
@@ -129,7 +131,7 @@
     letter-spacing: 0.08em; text-transform: uppercase;
   }
   .final-big {
-    font-family: 'Manrope', sans-serif; font-size: 30px; font-weight: 700;
+    font-family: 'Geist', 'Golos Text', sans-serif; font-size: 26px; font-weight: 650;
     color: var(--ink); margin-top: 20px; line-height: 1.2;
   }
   .final-sub {
@@ -194,7 +196,7 @@
 
   <div class="status" id="status"></div>
 
-  <div class="version-tag">версия 8</div>
+  <div class="version-tag">версия 11</div>
 </div>
 
 <script>
@@ -433,7 +435,7 @@
     const bandH = Math.floor(w / 8);
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(0, h / 2 - bandH / 2, w, bandH);
-    ctx.font = `bold ${Math.floor(w / 18)}px Inter, sans-serif`;
+    ctx.font = `bold ${Math.floor(w / 18)}px 'Geist', 'Golos Text', sans-serif`;
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -572,6 +574,7 @@
       }
     }
   });
+
 </script>
 
 </body>
