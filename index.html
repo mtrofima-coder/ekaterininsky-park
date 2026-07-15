@@ -6,20 +6,21 @@
 <title>Екатерининский парк — Учёт смен</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Tenor+Sans&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #0a0a0a;
+    --ink: #111111;
     --paper: #ffffff;
-    --line: #e5e5e5;
-    --muted: #8a8a8a;
+    --line: #e3e3e3;
+    --muted: #9a9a9a;
+    --accent: #C8102E;   /* алый */
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
     background: var(--paper);
     color: var(--ink);
-    font-family: 'Geist', 'Golos Text', sans-serif;
+    font-family: 'Tenor Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   body {
@@ -27,128 +28,224 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 48px 20px 32px;
+    padding: 64px 24px 40px;
   }
   .wrap { width: 100%; max-width: 420px; }
+
+  /* Плавное вплытие элементов при открытии */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .eyebrow, h1, .notice, .search-box, label {
+    opacity: 0;
+    animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .eyebrow { animation-delay: 0.05s; }
+  h1 { animation-delay: 0.15s; }
+  .notice { animation-delay: 0.3s; }
+  label { animation-delay: 0.4s; }
+  .search-box { animation-delay: 0.45s; }
+
   .eyebrow {
-    font-size: 13px; letter-spacing: 0.04em;
-    color: var(--muted); margin-bottom: 10px; font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
   }
   h1 {
-    font-family: 'Geist', 'Golos Text', sans-serif; font-style: normal;
-    font-size: 38px; line-height: 1.08; font-weight: 650;
-    color: var(--ink);
-    margin: 0 0 32px; letter-spacing: -0.025em;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px;
+    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    margin: 0 0 30px;
   }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
-
-  .search-box { position: relative; margin-bottom: 32px; }
+  .notice {
+    background: var(--accent);
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 16px 18px;
+    margin-bottom: 30px;
+    line-height: 1.9;
+    color: #ffffff;
+    text-align: center;
+  }
+  @keyframes noticePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.72; }
+  }
+  .notice.pulse { animation: rise 0.9s cubic-bezier(0.16,1,0.3,1) forwards, noticePulse 2.2s ease-in-out 1.2s infinite; }
+  label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .search-box { position: relative; margin-bottom: 36px; }
   #employeeSearch {
-    width: 100%; padding: 14px 4px; border: none; border-bottom: 1.5px solid var(--ink);
-    background: transparent; color: var(--ink); font-family: 'Geist', 'Golos Text', sans-serif;
-    font-size: 16px; font-weight: 500;
+    width: 100%;
+    padding: 14px 2px;
+    border: none;
+    border-bottom: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    font-family: 'Tenor Sans', sans-serif;
+    font-size: 16px;
   }
   #employeeSearch:focus { outline: none; }
-  #employeeSearch::placeholder { color: var(--muted); font-weight: 400; }
+  #employeeSearch::placeholder { color: var(--muted); }
   #employeeSearch:disabled { color: var(--muted); }
   .search-results {
     position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
-    background: var(--paper); border: 1.5px solid var(--ink); border-top: none;
-    max-height: 260px; overflow-y: auto; display: none;
+    background: var(--paper);
+    border: 1px solid var(--ink); border-top: none;
+    max-height: 280px; overflow-y: auto; display: none;
   }
   .search-results.show { display: block; }
   .search-item {
-    padding: 12px 14px; font-size: 14px; cursor: pointer;
+    padding: 14px 16px;
+    font-size: 14px;
+    cursor: pointer;
     border-bottom: 1px solid var(--line);
   }
   .search-item:last-child { border-bottom: none; }
-  .search-item:hover, .search-item:active { background: #f2f2f2; }
-  .search-empty { padding: 12px 14px; font-size: 13px; color: var(--muted); }
+  .search-item:hover, .search-item:active { background: #f6f6f6; }
+  .search-empty { padding: 14px 16px; font-size: 12px; color: var(--muted); letter-spacing: 0.08em; }
 
-  .btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .btn-row { display: flex; gap: 12px; margin-bottom: 12px; }
   button {
-    border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
-    padding: 16px; font-family: 'Geist', 'Golos Text', sans-serif; font-size: 14px; font-weight: 600;
-    cursor: pointer; flex: 1;
-    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
-    opacity: 0; transform: translateX(-16px); animation: slideIn 0.5s ease forwards;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    padding: 21px 10px;
+    font-family: 'Tenor Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex: 1;
+    transition: background 0.35s ease, color 0.35s ease;
+    opacity: 0;
+    animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     -webkit-tap-highlight-color: transparent;
   }
-  button:active { transform: scale(0.97); }
-  #startBtn { animation-delay: 0.15s; }
-  #endBtn { animation-delay: 0.3s; }
-  #nightStartBtn { animation-delay: 0.45s; }
-  #nightEndBtn { animation-delay: 0.6s; }
-  .btn-row-night { margin-top: 4px; }
-  .btn-outline-muted {
-    background: var(--ink); color: var(--paper); border-color: var(--ink); font-size: 13px;
-  }
-  .btn-outline-muted:hover { background: #2a2a2a; }
+  #startBtn { animation-delay: 0.55s; }
+  #endBtn { animation-delay: 0.65s; }
+  #nightStartBtn { animation-delay: 0.75s; }
+  #nightEndBtn { animation-delay: 0.85s; }
+  .btn-row-night { margin-top: 2px; }
+  button:hover { background: var(--ink); color: var(--paper); }
+  .btn-outline-muted { background: var(--ink); color: var(--paper); }
+  .btn-outline-muted:hover { background: #2c2c2c; }
   .btn-solid { background: var(--ink); color: var(--paper); }
-  .btn-solid:hover { background: #2a2a2a; }
-  button:not(.btn-solid):not(.btn-outline-muted):hover { background: var(--ink); color: var(--paper); }
-  button:disabled { opacity: 0.3 !important; cursor: not-allowed; }
-  @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  video, canvas, img.preview { width: 100%; margin-top: 20px; display: none; background: #000; }
+  .btn-solid:hover { background: #2c2c2c; }
+  button:disabled { opacity: 0.25 !important; cursor: not-allowed; }
+
+  video, canvas, img.preview { width: 100%; margin-top: 24px; display: none; background: #000; }
   canvas { display: none !important; }
 
-  /* Рабочие кнопки процесса — всегда полностью видимы, без анимаций появления */
   .btn-capture {
-    width: 100%; margin-top: 14px; display: none;
+    width: 100%; margin-top: 16px; display: none;
     background: var(--ink); color: var(--paper);
-    opacity: 1 !important; transform: none !important; animation: none !important;
+    opacity: 1 !important; animation: none !important; transform: none !important;
   }
   .btn-capture.show { display: block; }
-  .btn-capture:hover { background: #2a2a2a; }
+  .retake-row { display: none; margin-top: 16px; }
+  .retake-row.show { display: flex; }
+  .retake-row button {
+    opacity: 1 !important; animation: none !important; transform: none !important;
+  }
 
   textarea {
-    width: 100%; padding: 12px 0; border: none; border-bottom: 1.5px solid var(--line);
-    background: transparent; color: var(--ink); font-family: 'Geist', 'Golos Text', sans-serif; font-size: 14px;
-    resize: none; margin-top: 18px; min-height: 60px; display: none;
+    width: 100%; padding: 14px 2px;
+    border: none; border-bottom: 1px solid var(--line);
+    background: transparent; color: var(--ink);
+    font-family: 'Tenor Sans', sans-serif; font-size: 14px;
+    resize: none; margin-top: 20px; min-height: 64px; display: none;
   }
   textarea.show { display: block; }
   textarea:focus { outline: none; border-bottom-color: var(--ink); }
-  .field-note { font-size: 11px; color: var(--muted); margin-top: 6px; display: none; }
-  .field-note.show { display: block; }
-  .field-note.error { color: #c0392b; }
-  .retake-row { display: none; margin-top: 14px; }
-  .retake-row.show { display: flex; }
-  .retake-row button {
-    opacity: 1 !important; transform: none !important; animation: none !important;
+  textarea::placeholder { color: var(--muted); }
+  .field-note {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-top: 8px; display: none;
   }
+  .field-note.show { display: block; }
+  .field-note.error { color: var(--ink); }
+
   .status {
-    margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);
-    font-size: 13px; color: var(--muted); line-height: 1.8; display: none;
+    margin-top: 30px; padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted); line-height: 2;
+    display: none;
   }
   .status.show { display: block; }
-  .status b { color: var(--ink); font-weight: 600; }
-  .success { margin-top: 14px; font-size: 13px; font-weight: 600; }
-  .error-msg { margin-top: 14px; font-size: 13px; font-weight: 600; color: #c0392b; }
-  .hidden { display: none !important; }
-  .version-tag {
-    margin-top: 32px; font-size: 10px; color: #c8c8c8; text-align: center;
-    letter-spacing: 0.08em; text-transform: uppercase;
+  .status b { color: var(--ink); font-weight: 400; }
+  .success {
+    margin-top: 16px; font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink);
   }
+  .error-msg { margin-top: 16px; font-size: 13px; color: var(--ink); }
+  .hidden { display: none !important; }
+
+  .loading-big {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 2;
+    animation: breathe 1.6s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
   .final-big {
-    font-family: 'Geist', 'Golos Text', sans-serif; font-size: 26px; font-weight: 650;
-    color: var(--ink); margin-top: 20px; line-height: 1.2;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px; font-weight: 500;
+    color: var(--ink); margin-top: 26px; line-height: 1.15;
   }
   .final-sub {
-    font-size: 15px; font-weight: 700; color: #c0392b; margin-top: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin-top: 10px;
   }
-  .notice {
-    background: #fff7e6; border: 1.5px solid #e0a800; color: #7a5c00;
-    font-size: 13px; font-weight: 600; padding: 10px 14px; margin-bottom: 20px;
-    line-height: 1.5;
+  .confirm-box {
+    display: none;
+    border: 1px solid var(--ink);
+    padding: 22px 20px;
+    margin-top: 24px;
   }
-  .loading-big { color: #c0392b; font-weight: 700; font-size: 15px; line-height: 1.5; }
-  textarea::placeholder { font-weight: 700; color: #444; }
-  .field-note { font-weight: 700; }
+  .confirm-box.show { display: block; animation: rise 0.5s cubic-bezier(0.16,1,0.3,1); }
+  .confirm-box .q {
+    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+    line-height: 1.9; margin-bottom: 18px; text-align: center;
+  }
+  .confirm-box button {
+    opacity: 1 !important; animation: none !important; transform: none !important;
+  }
+  .final-note {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-top: 14px; line-height: 2;
+  }
+  .version-tag {
+    margin-top: 44px; font-size: 9px; color: #d4d4d4; text-align: center;
+    letter-spacing: 0.3em; text-transform: uppercase;
+  }
   .spinner {
-    display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line);
-    border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite;
-    margin-right: 6px; vertical-align: middle;
+    display: inline-block; width: 11px; height: 11px;
+    border: 1px solid var(--line); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.9s linear infinite;
+    margin-right: 8px; vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -159,7 +256,7 @@
   <div class="eyebrow">Учёт рабочего времени</div>
   <h1>Екатерининский парк</h1>
 
-  <div class="notice" id="vpnNotice">Перед отметкой: выключите VPN и включите геолокацию на телефоне</div>
+  <div class="notice pulse" id="vpnNotice">Перед отметкой: выключите VPN и включите геолокацию на телефоне</div>
 
   <div class="loading-big" id="loadBanner"><span class="spinner"></span>Ожидайте, информация загружается…</div>
 
@@ -194,9 +291,17 @@
     <button class="btn-solid" id="submitBtn">Отправить</button>
   </div>
 
+  <div class="confirm-box" id="nightConfirm">
+    <div class="q">Вы не забыли закрыть дневную смену?</div>
+    <div class="btn-row">
+      <button id="nightForgotBtn">Забыл, закрою</button>
+      <button class="btn-solid" id="nightOkBtn">Не забыл, работаю в ночь</button>
+    </div>
+  </div>
+
   <div class="status" id="status"></div>
 
-  <div class="version-tag">версия 11</div>
+  <div class="version-tag">версия 15</div>
 </div>
 
 <script>
@@ -222,7 +327,13 @@
   const commentField = document.getElementById('comment');
   const commentNote = document.getElementById('commentNote');
 
+  const nightConfirm = document.getElementById('nightConfirm');
+  const nightForgotBtn = document.getElementById('nightForgotBtn');
+  const nightOkBtn = document.getElementById('nightOkBtn');
+
   let EMPLOYEES = [];
+  let noOpenShift = false;      // закрытие смены без открытия — требуем комментарий
+  let jsonpCounter = 0;
   let selectedEmp = null;
   let stream = null;
   let shiftType = null;
@@ -294,6 +405,21 @@
   });
 
   // === Специальные условия ===
+  function jsonpState(fio, onOk, onErr) {
+    const cb = 'onState_' + (++jsonpCounter);
+    window[cb] = function(data) { delete window[cb]; onOk(data); };
+    const s = document.createElement('script');
+    s.src = SCRIPT_URL + '?action=state&fio=' + encodeURIComponent(fio) + '&callback=' + cb + '&_=' + Date.now();
+    s.onerror = function() { delete window[cb]; onErr(); };
+    document.body.appendChild(s);
+  }
+
+  function showBlockError(text) {
+    actionButtons.classList.remove('hidden');
+    searchInput.disabled = false;
+    log('<div class="loading-big" style="animation:none">' + text + '</div>');
+  }
+
   function isWeekend(date) {
     const day = date.getDay();
     return day === 0 || day === 6;
@@ -413,10 +539,60 @@
     `);
   }
 
-  startBtn.addEventListener('click', () => { shiftType = 'start'; isNightShift = false; startCamera(); });
-  endBtn.addEventListener('click', () => { shiftType = 'end'; isNightShift = false; startCamera(); });
-  nightStartBtn.addEventListener('click', () => { shiftType = 'start'; isNightShift = true; startCamera(); });
-  nightEndBtn.addEventListener('click', () => { shiftType = 'end'; isNightShift = true; startCamera(); });
+  function beginFlow(type, night) {
+    if (!selectedEmp) {
+      alert('Сначала выберите ФИО из списка');
+      return;
+    }
+    shiftType = type;
+    isNightShift = night;
+    noOpenShift = false;
+    nightConfirm.classList.remove('show');
+    actionButtons.classList.add('hidden');
+    log('<div class="loading-big"><span class="spinner"></span>Ожидайте, проверяем данные…</div>');
+
+    jsonpState(selectedEmp.fio, function(st) {
+      if (type === 'start' && !night && st.openDay) {
+        showBlockError('У вас уже открыта смена. Закройте её или откройте ночную смену');
+        return;
+      }
+      if (type === 'start' && night && st.openNight) {
+        showBlockError('У вас уже открыта ночная смена. Закройте её');
+        return;
+      }
+      if (type === 'start' && night && st.openDay) {
+        // Мягкое предупреждение с выбором
+        statusEl.classList.remove('show');
+        nightConfirm.classList.add('show');
+        return;
+      }
+      if (type === 'end' && !night && !st.openDay) {
+        noOpenShift = true; // пропускаем, но потребуем комментарий
+      }
+      if (type === 'end' && night && !st.openNight) {
+        noOpenShift = true;
+      }
+      startCamera();
+    }, function() {
+      // Сервер недоступен для проверки — не блокируем работу
+      startCamera();
+    });
+  }
+
+  nightForgotBtn.addEventListener('click', () => {
+    nightConfirm.classList.remove('show');
+    actionButtons.classList.remove('hidden');
+    log('<div class="loading-big" style="animation:none">Нажмите «Закончить смену», затем откройте ночную</div>');
+  });
+  nightOkBtn.addEventListener('click', () => {
+    nightConfirm.classList.remove('show');
+    startCamera();
+  });
+
+  startBtn.addEventListener('click', () => beginFlow('start', false));
+  endBtn.addEventListener('click', () => beginFlow('end', false));
+  nightStartBtn.addEventListener('click', () => beginFlow('start', true));
+  nightEndBtn.addEventListener('click', () => beginFlow('end', true));
 
   // === Снимок (со сжатием) ===
   captureBtn.addEventListener('click', () => {
@@ -435,7 +611,7 @@
     const bandH = Math.floor(w / 8);
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(0, h / 2 - bandH / 2, w, bandH);
-    ctx.font = `bold ${Math.floor(w / 18)}px 'Geist', 'Golos Text', sans-serif`;
+    ctx.font = `bold ${Math.floor(w / 18)}px 'Tenor Sans', sans-serif`;
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -450,7 +626,13 @@
 
     if (shiftType === 'end') {
       const reason = specialShiftReason();
-      if (reason) {
+      if (noOpenShift) {
+        commentField.classList.add('show');
+        commentField.dataset.required = 'true';
+        commentField.placeholder = 'Вы закрываете смену, не открыв её. Укажите причину — например: забыл открыть утром, пришёл в 8:00';
+        commentNote.classList.add('show');
+        commentNote.textContent = 'Это важно для учёта вашего времени';
+      } else if (reason) {
         commentField.classList.add('show');
         commentField.dataset.required = 'true';
         commentField.placeholder = `${reason} — обязательно опишите, что делали`;
@@ -515,7 +697,8 @@
       photoBase64: capturedPhoto,
       comment: commentField.value.trim(),
       specialReason: specialShiftReason(),
-      isNightShift: isNightShift
+      isNightShift: isNightShift,
+      noOpenShift: noOpenShift
     };
 
     fetch(SCRIPT_URL, {
@@ -555,14 +738,19 @@
       if (sendingRow) sendingRow.remove();
 
       if (result && result.success) {
-        const overtimeNote = result.overtime ? ' Отмечено как переработка.' : '';
         let bigMsg;
-        if (shiftType === 'start') {
-          bigMsg = '<div class="final-big">✅ Смена открыта</div><div class="final-sub">Не забудьте закрыть её в конце рабочего дня!</div>';
+        if (shiftType === 'start' && !isNightShift) {
+          bigMsg = '<div class="final-big">Смена открыта</div>' +
+                   '<div class="final-sub">Не забудьте закрыть её в конце рабочего дня!</div>' +
+                   '<div class="final-note">Работаете сегодня день и ночь? Вечером закройте дневную смену и откройте ночную</div>';
+        } else if (shiftType === 'start' && isNightShift) {
+          bigMsg = '<div class="final-big">Ночная смена открыта</div>' +
+                   '<div class="final-sub">Не забудьте закрыть её утром!</div>' +
+                   '<div class="final-note">Этим вы подтверждаете отработанные часы</div>';
         } else {
-          bigMsg = '<div class="final-big">✅ Смена закрыта</div><div class="final-sub">Спасибо за работу!</div>';
+          bigMsg = '<div class="final-big">Смена закрыта</div><div class="final-sub">Спасибо за работу!</div>';
         }
-        log(statusEl.innerHTML + `<div class="success">Данные записаны.${overtimeNote}</div>` + bigMsg);
+        log(statusEl.innerHTML + `<div class="success">Данные записаны</div>` + bigMsg);
       } else if (result && !result.success) {
         log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
@@ -579,3 +767,4 @@
 
 </body>
 </html>
+
