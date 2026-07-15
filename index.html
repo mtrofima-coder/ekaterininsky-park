@@ -88,7 +88,7 @@
     color: var(--muted);
     margin-bottom: 10px;
   }
-  .search-box { position: relative; margin-bottom: 36px; }
+  .search-box { position: relative; margin-bottom: 36px; z-index: 50; }
   #employeeSearch {
     width: 100%;
     padding: 14px 2px;
@@ -103,10 +103,11 @@
   #employeeSearch::placeholder { color: var(--muted); }
   #employeeSearch:disabled { color: var(--muted); }
   .search-results {
-    position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
     background: var(--paper);
     border: 1px solid var(--ink); border-top: none;
     max-height: 280px; overflow-y: auto; display: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
   }
   .search-results.show { display: block; }
   .search-item {
@@ -301,7 +302,7 @@
 
   <div class="status" id="status"></div>
 
-  <div class="version-tag">версия 15</div>
+  <div class="version-tag">версия 16</div>
 </div>
 
 <script>
@@ -767,4 +768,3 @@
 
 </body>
 </html>
-
