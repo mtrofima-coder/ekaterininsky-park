@@ -150,17 +150,31 @@
   .btn-solid:hover { background: #2c2c2c; }
   button:disabled { opacity: 0.25 !important; cursor: not-allowed; }
 
-  video, canvas, img.preview { width: 100%; margin-top: 24px; display: none; background: #000; }
+  video, canvas, img.preview {
+    width: 100%; margin-top: 16px; display: none; background: #000;
+    max-height: 44vh; object-fit: cover;
+  }
   canvas { display: none !important; }
 
   .btn-capture {
-    width: 100%; margin-top: 16px; display: none;
+    width: 100%; margin-top: 0; display: none;
     background: var(--ink); color: var(--paper);
     opacity: 1 !important; animation: none !important; transform: none !important;
   }
   .btn-capture.show { display: block; }
-  .retake-row { display: none; margin-top: 16px; }
+  .retake-row { display: none; margin-top: 0; }
   .retake-row.show { display: flex; }
+
+  .action-dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+    display: none;
+  }
+  .action-dock.show { display: block; }
+  .action-dock .inner { max-width: 420px; margin: 0 auto; }
+  body.docked { padding-bottom: 130px; }
   .retake-row button {
     opacity: 1 !important; animation: none !important; transform: none !important;
   }
@@ -238,6 +252,28 @@
     font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
     color: var(--muted); margin-top: 14px; line-height: 2;
   }
+  .btn-back {
+    display: none;
+    width: auto; flex: none;
+    border: none; background: none;
+    padding: 4px 0; margin-top: 22px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); text-align: left; cursor: pointer;
+    opacity: 1 !important; animation: none !important; transform: none !important;
+  }
+  .btn-back:hover { color: var(--ink); background: none; }
+  .btn-back.show { display: block; }
+  .btn-again {
+    width: 100%; margin-top: 22px;
+    background: var(--ink); color: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 18px 10px;
+    font-family: 'Tenor Sans', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer;
+    opacity: 1 !important; animation: none !important; transform: none !important;
+  }
+  .btn-again:hover { background: #2c2c2c; }
   .version-tag {
     margin-top: 44px; font-size: 9px; color: #d4d4d4; text-align: center;
     letter-spacing: 0.3em; text-transform: uppercase;
@@ -278,19 +314,14 @@
     </div>
   </div>
 
+  <button class="btn-back" id="backBtn">← Назад</button>
+
   <video id="video" autoplay playsinline></video>
   <canvas id="canvas"></canvas>
   <img id="preview" class="preview" alt="Снимок">
 
-  <button class="btn-capture" id="captureBtn">Сделать снимок</button>
-
   <textarea id="comment" placeholder="Опишите, что делали"></textarea>
   <div class="field-note" id="commentNote">Заполните перед отправкой</div>
-
-  <div class="btn-row retake-row" id="retakeRow">
-    <button id="retakeBtn">Переснять</button>
-    <button class="btn-solid" id="submitBtn">Отправить</button>
-  </div>
 
   <div class="confirm-box" id="nightConfirm">
     <div class="q">Вы не забыли закрыть дневную смену?</div>
@@ -302,7 +333,17 @@
 
   <div class="status" id="status"></div>
 
-  <div class="version-tag">версия 16</div>
+  <div class="version-tag">версия 18</div>
+</div>
+
+<div class="action-dock" id="actionDock">
+  <div class="inner">
+    <button class="btn-capture" id="captureBtn">Сделать снимок</button>
+    <div class="btn-row retake-row" id="retakeRow">
+      <button id="retakeBtn">Переснять</button>
+      <button class="btn-solid" id="submitBtn">Отправить</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -328,6 +369,10 @@
   const commentField = document.getElementById('comment');
   const commentNote = document.getElementById('commentNote');
 
+  const backBtn = document.getElementById('backBtn');
+  const actionDock = document.getElementById('actionDock');
+  const h1El = document.querySelector('h1');
+  const vpnEl = document.getElementById('vpnNotice');
   const nightConfirm = document.getElementById('nightConfirm');
   const nightForgotBtn = document.getElementById('nightForgotBtn');
   const nightOkBtn = document.getElementById('nightOkBtn');
@@ -494,8 +539,14 @@
     }
     actionButtons.classList.add('hidden');
     searchInput.disabled = true;
+    backBtn.classList.add('show');
+    h1El.style.display = 'none';
+    vpnEl.style.display = 'none';
     video.style.display = 'block';
     captureBtn.classList.add('show');
+    actionDock.classList.add('show');
+    document.body.classList.add('docked');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     captureBtn.disabled = true;
     eyebrowEl.textContent = shiftType === 'start' ? 'Открываем смену' : 'Закрываем смену';
     updateStatus('<div class="loading-big"><span class="spinner"></span>Ожидайте, открываем камеру…</div>');
@@ -580,6 +631,51 @@
     });
   }
 
+  function resetToHome(clearFio) {
+    if (stream) {
+      try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      stream = null;
+    }
+    video.style.display = 'none';
+    preview.style.display = 'none';
+    captureBtn.classList.remove('show');
+    retakeRow.classList.remove('show');
+    backBtn.classList.remove('show');
+    nightConfirm.classList.remove('show');
+    commentField.classList.remove('show');
+    commentField.value = '';
+    delete commentField.dataset.required;
+    commentNote.classList.remove('show', 'error');
+    statusEl.classList.remove('show');
+    statusEl.innerHTML = '';
+    submitBtn.disabled = false;
+    retakeBtn.disabled = false;
+    capturedPhoto = null;
+    locationData = null;
+    locationFailed = false;
+    noOpenShift = false;
+    eyebrowEl.textContent = 'Учёт рабочего времени';
+    h1El.style.display = '';
+    vpnEl.style.display = '';
+    actionDock.classList.remove('show');
+    document.body.classList.remove('docked');
+    actionButtons.classList.remove('hidden');
+    searchInput.disabled = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (clearFio) {
+      searchInput.value = '';
+      selectedEmp = null;
+    }
+  }
+
+  backBtn.addEventListener('click', () => resetToHome(false));
+
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'againBtn') {
+      resetToHome(true);
+    }
+  });
+
   nightForgotBtn.addEventListener('click', () => {
     nightConfirm.classList.remove('show');
     actionButtons.classList.remove('hidden');
@@ -645,6 +741,14 @@
     stream.getTracks().forEach(t => t.stop());
     updateStatus();
     updateSubmitState();
+
+    setTimeout(function() {
+      if (commentField.dataset.required === 'true') {
+        commentField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   });
 
   retakeBtn.addEventListener('click', () => {
@@ -681,6 +785,9 @@
 
     submitBtn.disabled = true;
     retakeBtn.disabled = true;
+    backBtn.classList.remove('show');
+    actionDock.classList.remove('show');
+    document.body.classList.remove('docked');
     updateStatus('<div class="loading-big" id="sendingRow"><span class="spinner"></span>Ожидайте, отправляем данные…</div>');
 
     const clientId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -751,15 +858,25 @@
         } else {
           bigMsg = '<div class="final-big">Смена закрыта</div><div class="final-sub">Спасибо за работу!</div>';
         }
-        log(statusEl.innerHTML + `<div class="success">Данные записаны</div>` + bigMsg);
+        log(statusEl.innerHTML + `<div class="success">Данные записаны</div>` + bigMsg +
+            '<button class="btn-again" id="againBtn">Отметить ещё</button>');
+        setTimeout(function() {
+          statusEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
       } else if (result && !result.success) {
         log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
+        backBtn.classList.add('show');
+        actionDock.classList.add('show');
+        document.body.classList.add('docked');
       } else {
         log(statusEl.innerHTML + `<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
+        backBtn.classList.add('show');
+        actionDock.classList.add('show');
+        document.body.classList.add('docked');
       }
     }
   });
@@ -768,4 +885,3 @@
 
 </body>
 </html>
-
