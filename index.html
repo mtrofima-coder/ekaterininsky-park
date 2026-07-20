@@ -335,7 +335,7 @@
 
   <div class="status" id="status"></div>
 
-  <div class="version-tag">версия 19</div>
+  <div class="version-tag">версия 20</div>
 </div>
 
 <div class="action-dock" id="actionDock">
@@ -732,11 +732,20 @@
         commentNote.classList.add('show');
         commentNote.textContent = 'Это важно для учёта вашего времени';
       } else if (reason) {
+        // Комментарий при закрытии ночной смены обязателен только для отдела "ИТР".
+        // Для остальных отделов (ИТР ПТО, ИТР-Геодезия, водители и т.д.) — по желанию.
+        const deptNorm = (selectedEmp.dept || '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/ё/g, 'е');
+        const nightCommentOptional = isNightShift && deptNorm !== 'итр';
+
         commentField.classList.add('show');
-        commentField.dataset.required = 'true';
-        commentField.placeholder = `${reason} — обязательно опишите, что делали`;
-        commentNote.classList.add('show');
-        commentNote.textContent = 'Обязательно заполните комментарий перед отправкой';
+        if (nightCommentOptional) {
+          commentField.placeholder = 'Комментарий (по желанию)';
+        } else {
+          commentField.dataset.required = 'true';
+          commentField.placeholder = `${reason} — обязательно опишите, что делали`;
+          commentNote.classList.add('show');
+          commentNote.textContent = 'Обязательно заполните комментарий перед отправкой';
+        }
       }
     }
 
