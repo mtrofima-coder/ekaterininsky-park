@@ -201,4 +201,697 @@
   .status {
     margin-top: 30px; padding-top: 24px;
     border-top: 1px solid var(--line);
-    font-size: 13px; color: var(
+    font-size: 13px; color: var(--muted); line-height: 2;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status b { color: var(--ink); font-weight: 400; }
+  .success {
+    margin-top: 16px; font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink);
+  }
+  .error-msg { margin-top: 16px; font-size: 13px; color: var(--ink); }
+  .hidden { display: none !important; }
+
+  .loading-big {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 2;
+    animation: breathe 1.6s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .final-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px; font-weight: 500;
+    color: var(--ink); margin-top: 26px; line-height: 1.15;
+  }
+  .final-sub {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin-top: 10px;
+  }
+  .confirm-box {
+    display: none;
+    border: 1px solid var(--ink);
+    padding: 22px 20px;
+    margin-top: 24px;
+  }
+  .confirm-box.show { display: block; animation: rise 0.5s cubic-bezier(0.16,1,0.3,1); }
+  .confirm-box .q {
+    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+    line-height: 1.9; margin-bottom: 18px; text-align: center;
+  }
+  .confirm-box button {
+    opacity: 1 !important; animation: none !important; transform: none !important;
+  }
+  .final-note {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-top: 14px; line-height: 2;
+  }
+  .btn-back {
+    display: none;
+    width: auto; flex: none;
+    border: none; background: none;
+    padding: 4px 0; margin-top: 22px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); text-align: left; cursor: pointer;
+    opacity: 1 !important; animation: none !important; transform: none !important;
+  }
+  .btn-back:hover { color: var(--ink); background: none; }
+  .btn-back.show { display: block; }
+  .btn-again {
+    width: 100%; margin-top: 22px;
+    background: var(--ink); color: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 18px 10px;
+    font-family: 'Tenor Sans', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer;
+    opacity: 1 !important; animation: none !important; transform: none !important;
+  }
+  .btn-again:hover { background: #2c2c2c; }
+  .version-tag {
+    margin-top: 44px; font-size: 9px; color: #d4d4d4; text-align: center;
+    letter-spacing: 0.3em; text-transform: uppercase;
+  }
+  .spinner {
+    display: inline-block; width: 11px; height: 11px;
+    border: 1px solid var(--line); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.9s linear infinite;
+    margin-right: 8px; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">Учёт рабочего времени</div>
+  <h1>Екатерининский парк</h1>
+
+  <div class="notice pulse" id="vpnNotice">Перед отметкой: выключите VPN и включите геолокацию на телефоне</div>
+
+  <div class="loading-big" id="loadBanner"><span class="spinner"></span>Ожидайте, информация загружается…</div>
+
+  <label for="employeeSearch">ФИО</label>
+  <div class="search-box">
+    <input type="text" id="employeeSearch" placeholder="Загружаем список…" autocomplete="off" disabled>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <div id="actionButtons">
+    <div class="btn-row">
+      <button id="startBtn">Начать смену</button>
+      <button id="endBtn">Закончить смену</button>
+    </div>
+    <div class="btn-row btn-row-night">
+      <button class="btn-outline-muted" id="nightStartBtn">Начать ночную смену</button>
+      <button class="btn-outline-muted" id="nightEndBtn">Закончить ночную смену</button>
+    </div>
+  </div>
+
+  <button class="btn-back" id="backBtn">← Назад</button>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <img id="preview" class="preview" alt="Снимок">
+
+  <textarea id="comment" placeholder="Опишите, что делали"></textarea>
+  <div class="field-note" id="commentNote">Заполните перед отправкой</div>
+
+  <div class="confirm-box" id="nightConfirm">
+    <div class="q">Вы не забыли закрыть дневную смену?</div>
+    <div class="btn-row">
+      <button id="nightForgotBtn">Забыл, закрою</button>
+      <button class="btn-solid" id="nightOkBtn">Не забыл, работаю в ночь</button>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="version-tag">версия 23</div>
+</div>
+
+<div class="action-dock" id="actionDock">
+  <div class="inner">
+    <button class="btn-capture" id="captureBtn">Сделать снимок</button>
+    <div class="btn-row retake-row" id="retakeRow">
+      <button id="retakeBtn">Переснять</button>
+      <button class="btn-solid" id="submitBtn">Отправить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN5VZ5pn97fpcD9d38QfFritTVRTDaZSUJ-9IFi8rQPfbTyck3iTABNLQoZOG07tZi/exec';
+  const PHOTO_MAX_WIDTH = 1000; // сжатие фото для быстрой отправки
+
+  const searchInput = document.getElementById('employeeSearch');
+  const searchResults = document.getElementById('searchResults');
+  const startBtn = document.getElementById('startBtn');
+  const endBtn = document.getElementById('endBtn');
+  const nightStartBtn = document.getElementById('nightStartBtn');
+  const nightEndBtn = document.getElementById('nightEndBtn');
+  const actionButtons = document.getElementById('actionButtons');
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const preview = document.getElementById('preview');
+  const captureBtn = document.getElementById('captureBtn');
+  const retakeRow = document.getElementById('retakeRow');
+  const retakeBtn = document.getElementById('retakeBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('status');
+  const eyebrowEl = document.querySelector('.eyebrow');
+  const commentField = document.getElementById('comment');
+  const commentNote = document.getElementById('commentNote');
+
+  const backBtn = document.getElementById('backBtn');
+  const actionDock = document.getElementById('actionDock');
+  const h1El = document.querySelector('h1');
+  const vpnEl = document.getElementById('vpnNotice');
+  const nightConfirm = document.getElementById('nightConfirm');
+  const nightForgotBtn = document.getElementById('nightForgotBtn');
+  const nightOkBtn = document.getElementById('nightOkBtn');
+
+  let EMPLOYEES = [];
+  let noOpenShift = false;      // закрытие смены без открытия — требуем комментарий
+  let jsonpCounter = 0;
+  let selectedEmp = null;
+  let stream = null;
+  let shiftType = null;
+  let isNightShift = false;
+  let locationData = null;   // { lat, lon, address }
+  let locationFailed = false;
+  let capturedPhoto = null;
+
+  function log(html) {
+    statusEl.innerHTML = html;
+    statusEl.classList.add('show');
+  }
+
+  // === Загрузка списка сотрудников (JSONP) ===
+  window.onEmployeesLoaded = function(data) {
+    document.getElementById('loadBanner').style.display = 'none';
+    if (data.success && data.employees.length) {
+      EMPLOYEES = data.employees;
+      searchInput.disabled = false;
+      searchInput.placeholder = 'Начните вводить фамилию…';
+    } else {
+      searchInput.placeholder = 'Список пуст — проверьте вкладку "Сотрудники"';
+    }
+  };
+
+  (function loadEmployees() {
+    const s = document.createElement('script');
+    s.src = SCRIPT_URL + '?action=employees&callback=onEmployeesLoaded&_=' + Date.now();
+    s.onerror = function() {
+      document.getElementById('loadBanner').style.display = 'none';
+      searchInput.placeholder = 'Ошибка загрузки списка';
+      log('<div class="error-msg">Не удалось загрузить список сотрудников. Обновите страницу.</div>');
+    };
+    document.body.appendChild(s);
+  })();
+
+  // === Поиск по ФИО ===
+  searchInput.addEventListener('input', function() {
+    selectedEmp = null;
+    const q = searchInput.value.trim().toLowerCase();
+    if (q.length < 1) {
+      searchResults.classList.remove('show');
+      return;
+    }
+    const matches = EMPLOYEES.filter(e => e.display.toLowerCase().includes(q)).slice(0, 8);
+    searchResults.innerHTML = '';
+    if (matches.length) {
+      matches.forEach(emp => {
+        const item = document.createElement('div');
+        item.className = 'search-item';
+        item.textContent = emp.display;
+        item.addEventListener('click', () => {
+          selectedEmp = emp;
+          searchInput.value = emp.display;
+          searchResults.classList.remove('show');
+        });
+        searchResults.appendChild(item);
+      });
+    } else {
+      searchResults.innerHTML = '<div class="search-empty">Никого не нашли — проверьте написание</div>';
+    }
+    searchResults.classList.add('show');
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-box')) {
+      searchResults.classList.remove('show');
+    }
+  });
+
+  // === Специальные условия ===
+  function jsonpState(fio, onOk, onErr) {
+    const cb = 'onState_' + (++jsonpCounter);
+    window[cb] = function(data) { delete window[cb]; onOk(data); };
+    const s = document.createElement('script');
+    s.src = SCRIPT_URL + '?action=state&fio=' + encodeURIComponent(fio) + '&callback=' + cb + '&_=' + Date.now();
+    s.onerror = function() { delete window[cb]; onErr(); };
+    document.body.appendChild(s);
+  }
+
+  function showBlockError(text) {
+    actionButtons.classList.remove('hidden');
+    searchInput.disabled = false;
+    log('<div class="loading-big" style="animation:none">' + text + '</div>');
+  }
+
+  function isWeekend(date) {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  }
+  function specialShiftReason() {
+    if (isNightShift) return 'Ночная смена';
+    if (isWeekend(new Date())) return 'Смена в выходной день';
+    return null;
+  }
+
+  // === Геолокация (обязательная) + адрес словами ===
+  function requestLocation() {
+    locationData = null;
+    locationFailed = false;
+    updateStatus();
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        locationData = {
+          lat: pos.coords.latitude.toFixed(5),
+          lon: pos.coords.longitude.toFixed(5),
+          address: ''
+        };
+        updateStatus();
+        updateSubmitState();
+        fetchAddress(locationData.lat, locationData.lon);
+      },
+      (err) => {
+        locationFailed = true;
+        updateStatus();
+        updateSubmitState();
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
+    );
+  }
+
+  function fetchAddress(lat, lon, attempt) {
+    attempt = attempt || 0;
+    fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon + '&accept-language=ru&zoom=17')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.address) {
+          const a = data.address;
+          const parts = [];
+          if (a.road) parts.push(a.road + (a.house_number ? ', ' + a.house_number : ''));
+          else if (a.pedestrian) parts.push(a.pedestrian);
+          else if (a.suburb) parts.push(a.suburb);
+          if (a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
+          if (parts.length && locationData) {
+            locationData.address = parts.join(', ');
+            updateStatus();
+            return;
+          }
+        }
+        if (attempt < 3) setTimeout(() => fetchAddress(lat, lon, attempt + 1), 1500);
+      })
+      .catch(() => {
+        if (attempt < 3) setTimeout(() => fetchAddress(lat, lon, attempt + 1), 1500);
+      });
+  }
+
+  function updateSubmitState() {
+    // Кнопка активна всегда; проверка локации происходит при нажатии с понятным сообщением
+  }
+
+  // === Камера ===
+  async function startCamera() {
+    if (!selectedEmp) {
+      alert('Сначала выберите ФИО из списка');
+      return;
+    }
+    actionButtons.classList.add('hidden');
+    searchInput.disabled = true;
+    backBtn.classList.add('show');
+    h1El.style.display = 'none';
+    vpnEl.style.display = 'none';
+    video.style.display = 'block';
+    captureBtn.classList.add('show');
+    actionDock.classList.add('show');
+    document.body.classList.add('docked');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    captureBtn.disabled = true;
+    eyebrowEl.textContent = shiftType === 'start' ? 'Открываем смену' : 'Закрываем смену';
+    updateStatus('<div class="loading-big"><span class="spinner"></span>Ожидайте, открываем камеру…</div>');
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      video.srcObject = stream;
+      video.setAttribute('playsinline', '');
+      video.muted = true;
+
+      // Разблокируем кнопку по любому сигналу готовности (разные браузеры шлют разные события)
+      let camReady = false;
+      const enableCapture = function() {
+        if (camReady) return;
+        camReady = true;
+        captureBtn.disabled = false;
+        updateStatus();
+      };
+      video.onplaying = enableCapture;
+      video.onloadedmetadata = enableCapture;
+      video.oncanplay = enableCapture;
+
+      try { await video.play(); } catch (e) {}
+
+      // Страховка: если ни одно событие не пришло, включаем кнопку через 2.5 сек
+      setTimeout(function() {
+        if (video.videoWidth > 0 || stream) enableCapture();
+      }, 2500);
+    } catch (err) {
+      log('<div class="error-msg">Не удалось получить доступ к камере: ' + err.message + '</div>');
+      return;
+    }
+
+    requestLocation();
+  }
+
+  function updateStatus(extraHtml) {
+    if (!selectedEmp) return;
+    const time = new Date().toLocaleString('ru-RU');
+
+    let locLine;
+    if (locationData) {
+      locLine = locationData.address
+        ? locationData.address + ' (' + locationData.lat + ', ' + locationData.lon + ')'
+        : locationData.lat + ', ' + locationData.lon;
+    } else if (locationFailed) {
+      locLine = '<span class="error-msg" style="margin:0">не определена — без геолокации отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</span>';
+    } else {
+      locLine = '<span class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение…</span>';
+    }
+
+    log(`
+      <div><b>Сотрудник</b> — ${selectedEmp.fio}${selectedEmp.dolzh ? ' — ' + selectedEmp.dolzh : ''}</div>
+      <div><b>Отдел</b> — ${selectedEmp.dept}</div>
+      <div><b>Событие</b> — ${shiftType === 'start' ? 'Начало смены' : 'Конец смены'}${isNightShift ? ' (ночная)' : ''}</div>
+      <div><b>Время</b> — ${time}</div>
+      <div><b>Локация</b> — ${locLine}</div>
+      ${extraHtml || ''}
+    `);
+  }
+
+  function beginFlow(type, night) {
+    if (!selectedEmp) {
+      alert('Сначала выберите ФИО из списка');
+      return;
+    }
+    shiftType = type;
+    isNightShift = night;
+    noOpenShift = false;
+    nightConfirm.classList.remove('show');
+    actionButtons.classList.add('hidden');
+    log('<div class="loading-big"><span class="spinner"></span>Ожидайте, проверяем данные…</div>');
+
+    jsonpState(selectedEmp.fio, function(st) {
+      if (type === 'start' && !night && st.openDay) {
+        showBlockError('У вас уже открыта смена. Закройте её или откройте ночную смену');
+        return;
+      }
+      if (type === 'start' && night && st.openNight) {
+        showBlockError('У вас уже открыта ночная смена. Закройте её');
+        return;
+      }
+      if (type === 'start' && night && st.openDay) {
+        // Мягкое предупреждение с выбором
+        statusEl.classList.remove('show');
+        nightConfirm.classList.add('show');
+        return;
+      }
+      if (type === 'end' && !night && !st.openDay) {
+        noOpenShift = true; // пропускаем, но потребуем комментарий
+      }
+      if (type === 'end' && night && !st.openNight) {
+        noOpenShift = true;
+      }
+      startCamera();
+    }, function() {
+      // Сервер недоступен для проверки — не блокируем работу
+      startCamera();
+    });
+  }
+
+  function resetToHome(clearFio) {
+    if (stream) {
+      try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      stream = null;
+    }
+    video.style.display = 'none';
+    preview.style.display = 'none';
+    captureBtn.classList.remove('show');
+    retakeRow.classList.remove('show');
+    backBtn.classList.remove('show');
+    nightConfirm.classList.remove('show');
+    commentField.classList.remove('show');
+    commentField.value = '';
+    delete commentField.dataset.required;
+    commentNote.classList.remove('show', 'error');
+    statusEl.classList.remove('show');
+    statusEl.innerHTML = '';
+    submitBtn.disabled = false;
+    retakeBtn.disabled = false;
+    capturedPhoto = null;
+    locationData = null;
+    locationFailed = false;
+    noOpenShift = false;
+    eyebrowEl.textContent = 'Учёт рабочего времени';
+    h1El.style.display = '';
+    vpnEl.style.display = '';
+    actionDock.classList.remove('show');
+    document.body.classList.remove('docked');
+    actionButtons.classList.remove('hidden');
+    searchInput.disabled = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (clearFio) {
+      searchInput.value = '';
+      selectedEmp = null;
+    }
+  }
+
+  backBtn.addEventListener('click', () => resetToHome(false));
+
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'againBtn') {
+      resetToHome(true);
+    }
+  });
+
+  nightForgotBtn.addEventListener('click', () => {
+    nightConfirm.classList.remove('show');
+    actionButtons.classList.remove('hidden');
+    log('<div class="loading-big" style="animation:none">Нажмите «Закончить смену», затем откройте ночную</div>');
+  });
+  nightOkBtn.addEventListener('click', () => {
+    nightConfirm.classList.remove('show');
+    startCamera();
+  });
+
+  startBtn.addEventListener('click', () => beginFlow('start', false));
+  endBtn.addEventListener('click', () => beginFlow('end', false));
+  nightStartBtn.addEventListener('click', () => beginFlow('start', true));
+  nightEndBtn.addEventListener('click', () => beginFlow('end', true));
+
+  // === Снимок (со сжатием) ===
+  captureBtn.addEventListener('click', () => {
+    // Квадратный кадр: вырезаем центр видео — лицо в центре селфи,
+    // и превью в Google Диске показывает почти весь квадрат
+    const srcW = video.videoWidth;
+    const srcH = video.videoHeight;
+    if (!srcW || !srcH) {
+      updateStatus('<div class="loading-big"><span class="spinner"></span>Ожидайте, камера ещё запускается…</div>');
+      return;
+    }
+    const side = Math.min(srcW, srcH);
+    const sx = (srcW - side) / 2;
+    const sy = (srcH - side) / 2;
+
+    const outSide = Math.min(side, PHOTO_MAX_WIDTH);
+    canvas.width = outSide;
+    canvas.height = outSide;
+    const w = outSide, h = outSide;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, sx, sy, side, side, 0, 0, outSide, outSide);
+
+    // Штамп даты-времени — вверху кадра, чтобы попадал в превью
+    const timeStr = new Date().toLocaleString('ru-RU');
+    const bandH = Math.floor(h / 9);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, w, bandH);
+    ctx.font = `bold ${Math.floor(w / 17)}px 'Tenor Sans', sans-serif`;
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(timeStr, w / 2, bandH / 2);
+
+    capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+    preview.src = capturedPhoto;
+    preview.style.display = 'block';
+    video.style.display = 'none';
+    captureBtn.classList.remove('show');
+    retakeRow.classList.add('show');
+
+    if (shiftType === 'end') {
+      const reason = specialShiftReason();
+      // Комментарий больше нигде не блокирует отправку — поле всегда по желанию,
+      // но подсказка меняется в зависимости от ситуации.
+      if (noOpenShift) {
+        commentField.classList.add('show');
+        commentField.placeholder = 'Вы закрываете смену, не открыв её. По желанию укажите причину — например: забыл открыть утром, пришёл в 8:00';
+      } else if (reason) {
+        commentField.classList.add('show');
+        commentField.placeholder = `${reason} — комментарий по желанию`;
+      }
+    }
+
+    stream.getTracks().forEach(t => t.stop());
+    updateStatus();
+    updateSubmitState();
+
+    setTimeout(function() {
+      preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  });
+
+  retakeBtn.addEventListener('click', () => {
+    preview.style.display = 'none';
+    retakeRow.classList.remove('show');
+    startCamera();
+  });
+
+  // === Отправка ===
+  submitBtn.addEventListener('click', () => {
+    if (!capturedPhoto) {
+      updateStatus('<div class="loading-big">Сначала сделайте снимок.</div>');
+      return;
+    }
+    if (!locationData) {
+      if (locationFailed) {
+        updateStatus('<div class="loading-big">Без геолокации отправить нельзя. Разрешите доступ к местоположению в настройках браузера и нажмите «Переснять».</div>');
+        requestLocation();
+      } else {
+        updateStatus('<div class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение… После этого нажмите «Отправить» ещё раз.</div>');
+      }
+      return;
+    }
+
+    submitBtn.disabled = true;
+    retakeBtn.disabled = true;
+    backBtn.classList.remove('show');
+    actionDock.classList.remove('show');
+    document.body.classList.remove('docked');
+    updateStatus('<div class="loading-big" id="sendingRow"><span class="spinner"></span>Ожидайте, отправляем данные…</div>');
+
+    const clientId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+
+    const payload = {
+      clientId: clientId,
+      dept: selectedEmp.dept,
+      fio: selectedEmp.fio,
+      dolzh: selectedEmp.dolzh,
+      eventType: shiftType,
+      time: new Date().toISOString(),
+      lat: locationData.lat,
+      lon: locationData.lon,
+      address: locationData.address || '',
+      photoBase64: capturedPhoto,
+      comment: commentField.value.trim(),
+      specialReason: specialShiftReason(),
+      isNightShift: isNightShift,
+      noOpenShift: noOpenShift
+    };
+
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    })
+      .then(() => { checkDelivery(clientId, 0); })
+      .catch(() => { checkDelivery(clientId, 0); });
+
+    function checkDelivery(id, attempt) {
+      if (attempt >= 8) {
+        finishSending(null);
+        return;
+      }
+      const cbName = 'onCheck_' + attempt;
+      window[cbName] = function(data) {
+        delete window[cbName];
+        if (data.found) {
+          finishSending(data.result);
+        } else {
+          setTimeout(() => checkDelivery(id, attempt + 1), 2000);
+        }
+      };
+      const s = document.createElement('script');
+      s.src = SCRIPT_URL + '?action=check&id=' + encodeURIComponent(id) + '&callback=' + cbName + '&_=' + Date.now();
+      s.onerror = function() {
+        delete window[cbName];
+        setTimeout(() => checkDelivery(id, attempt + 1), 2000);
+      };
+      document.body.appendChild(s);
+    }
+
+    function finishSending(result) {
+      const sendingRow = document.getElementById('sendingRow');
+      if (sendingRow) sendingRow.remove();
+
+      if (result && result.success) {
+        let bigMsg;
+        if (shiftType === 'start' && !isNightShift) {
+          bigMsg = '<div class="final-big">Смена открыта</div>' +
+                   '<div class="final-sub">Не забудьте закрыть её в конце рабочего дня!</div>' +
+                   '<div class="final-note">Работаете сегодня день и ночь? Вечером закройте дневную смену и откройте ночную</div>';
+        } else if (shiftType === 'start' && isNightShift) {
+          bigMsg = '<div class="final-big">Ночная смена открыта</div>' +
+                   '<div class="final-sub">Не забудьте закрыть её утром!</div>' +
+                   '<div class="final-note">Этим вы подтверждаете отработанные часы</div>';
+        } else {
+          bigMsg = '<div class="final-big">Смена закрыта</div><div class="final-sub">Спасибо за работу!</div>';
+        }
+        log(statusEl.innerHTML + `<div class="success">Данные записаны</div>` + bigMsg +
+            '<button class="btn-again" id="againBtn">Отметить ещё</button>');
+        setTimeout(function() {
+          statusEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
+      } else if (result && !result.success) {
+        log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
+        submitBtn.disabled = false;
+        retakeBtn.disabled = false;
+        backBtn.classList.add('show');
+        actionDock.classList.add('show');
+        document.body.classList.add('docked');
+      } else {
+        log(statusEl.innerHTML + `<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
+        submitBtn.disabled = false;
+        retakeBtn.disabled = false;
+        backBtn.classList.add('show');
+        actionDock.classList.add('show');
+        document.body.classList.add('docked');
+      }
+    }
+  });
+
+</script>
+
+</body>
+</html>
