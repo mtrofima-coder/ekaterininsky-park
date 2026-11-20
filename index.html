@@ -265,6 +265,13 @@
   }
   .btn-back:hover { color: var(--ink); background: none; }
   .btn-back.show { display: block; }
+  .live-status {
+    display: none;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 12px 0 2px; color: var(--accent); line-height: 1.7;
+  }
+  .live-status.show { display: block; animation: rise 0.35s ease forwards; }
+  .live-status.ok { color: var(--ink); }
   .btn-again {
     width: 100%; margin-top: 22px;
     background: var(--ink); color: var(--paper);
@@ -318,6 +325,8 @@
 
   <button class="btn-back" id="backBtn">← Назад</button>
 
+  <div class="live-status" id="liveStatus"></div>
+
   <video id="video" autoplay playsinline></video>
   <canvas id="canvas"></canvas>
   <img id="preview" class="preview" alt="Снимок">
@@ -325,17 +334,16 @@
   <textarea id="comment" placeholder="Опишите, что делали"></textarea>
   <div class="field-note" id="commentNote">Заполните перед отправкой</div>
 
-  <div class="confirm-box" id="nightConfirm">
-    <div class="q">Вы не забыли закрыть дневную смену?</div>
+  <div class="confirm-box" id="forgotNotice">
+    <div class="q" id="forgotText"></div>
     <div class="btn-row">
-      <button id="nightForgotBtn">Забыл, закрою</button>
-      <button class="btn-solid" id="nightOkBtn">Не забыл, работаю в ночь</button>
+      <button class="btn-solid" id="forgotOkBtn">Понятно</button>
     </div>
   </div>
 
   <div class="status" id="status"></div>
 
-  <div class="version-tag">версия 23</div>
+  <div class="version-tag">версия 28</div>
 </div>
 
 <div class="action-dock" id="actionDock">
@@ -350,7 +358,7 @@
 
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN5VZ5pn97fpcD9d38QfFritTVRTDaZSUJ-9IFi8rQPfbTyck3iTABNLQoZOG07tZi/exec';
-  const PHOTO_MAX_WIDTH = 1000; // сжатие фото для быстрой отправки
+  const PHOTO_MAX_WIDTH = 780; // сжатие фото для быстрой отправки, особенно на слабом интернете
 
   const searchInput = document.getElementById('employeeSearch');
   const searchResults = document.getElementById('searchResults');
@@ -372,12 +380,25 @@
   const commentNote = document.getElementById('commentNote');
 
   const backBtn = document.getElementById('backBtn');
+  const liveStatusEl = document.getElementById('liveStatus');
+
+  function setLiveStatus(html, isFinal) {
+    if (!html) {
+      liveStatusEl.classList.remove('show', 'ok');
+      liveStatusEl.innerHTML = '';
+      return;
+    }
+    liveStatusEl.innerHTML = html;
+    liveStatusEl.classList.add('show');
+    liveStatusEl.classList.toggle('ok', !!isFinal);
+  }
   const actionDock = document.getElementById('actionDock');
   const h1El = document.querySelector('h1');
   const vpnEl = document.getElementById('vpnNotice');
-  const nightConfirm = document.getElementById('nightConfirm');
-  const nightForgotBtn = document.getElementById('nightForgotBtn');
-  const nightOkBtn = document.getElementById('nightOkBtn');
+  const forgotNotice = document.getElementById('forgotNotice');
+  const forgotText = document.getElementById('forgotText');
+  const forgotOkBtn = document.getElementById('forgotOkBtn');
+  let pendingAction = null;   // что выполнить после нажатия «Понятно»
 
   let EMPLOYEES = [];
   let noOpenShift = false;      // закрытие смены без открытия — требуем комментарий
@@ -465,6 +486,7 @@
   function showBlockError(text) {
     actionButtons.classList.remove('hidden');
     searchInput.disabled = false;
+    setLiveStatus('');
     log('<div class="loading-big" style="animation:none">' + text + '</div>');
   }
 
@@ -600,6 +622,17 @@
       locLine = '<span class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение…</span>';
     }
 
+    // Всегда видимая короткая строка статуса (не требует прокрутки)
+    if (extraHtml) {
+      setLiveStatus(extraHtml.replace(/\s*id="[^"]*"/g, ''));
+    } else if (!locationData && !locationFailed) {
+      setLiveStatus('<span class="spinner"></span>Ожидайте, определяем местоположение…');
+    } else if (locationFailed) {
+      setLiveStatus('Локация не определена — отправка невозможна');
+    } else {
+      setLiveStatus('');
+    }
+
     log(`
       <div><b>Сотрудник</b> — ${selectedEmp.fio}${selectedEmp.dolzh ? ' — ' + selectedEmp.dolzh : ''}</div>
       <div><b>Отдел</b> — ${selectedEmp.dept}</div>
@@ -618,37 +651,65 @@
     shiftType = type;
     isNightShift = night;
     noOpenShift = false;
-    nightConfirm.classList.remove('show');
+    forgotNotice.classList.remove('show');
     actionButtons.classList.add('hidden');
     log('<div class="loading-big"><span class="spinner"></span>Ожидайте, проверяем данные…</div>');
+    setLiveStatus('<span class="spinner"></span>Ожидайте, проверяем данные…');
 
     jsonpState(selectedEmp.fio, function(st) {
-      if (type === 'start' && !night && st.openDay) {
-        showBlockError('У вас уже открыта смена. Закройте её или откройте ночную смену');
+      const isDayStart = (type === 'start' && !night);
+      const isNightStart = (type === 'start' && night);
+
+      // Строгие запреты — без вопросов и кнопок «всё равно продолжить»
+      if (isDayStart && st.openDay) {
+        showBlockError('Дневная смена уже открыта');
         return;
       }
-      if (type === 'start' && night && st.openNight) {
-        showBlockError('У вас уже открыта ночная смена. Закройте её');
+      if (isNightStart && st.openDay) {
+        showBlockError('У вас не закрыта дневная смена. Сначала закройте её, затем откройте ночную');
         return;
       }
-      if (type === 'start' && night && st.openDay) {
-        // Мягкое предупреждение с выбором
-        statusEl.classList.remove('show');
-        nightConfirm.classList.add('show');
+      if (isNightStart && st.nightToday) {
+        showBlockError('Ночная смена уже открыта');
         return;
       }
-      if (type === 'end' && !night && !st.openDay) {
-        noOpenShift = true; // пропускаем, но потребуем комментарий
+
+      // Накануне осталась незакрытая смена (дневная или ночная) — только напоминание
+      if (type === 'start' && st.forgotType) {
+        showNotice('Предыдущая смена не закрыта. Просьба не забывать закрывать смену вовремя — это может повлиять на оплату',
+          function() { startCamera(); });
+        return;
       }
-      if (type === 'end' && night && !st.openNight) {
+
+      // Закрытие смены, которую не открывали — напоминание, затем обязательный комментарий
+      if (type === 'end' && ((!night && !st.openDay) || (night && !st.openNight))) {
         noOpenShift = true;
+        showNotice('Вы забыли открыть смену. Просьба делать это вовремя — это может повлиять на оплату',
+          function() { startCamera(); });
+        return;
       }
+
       startCamera();
     }, function() {
       // Сервер недоступен для проверки — не блокируем работу
       startCamera();
     });
   }
+
+  function showNotice(text, onOk) {
+    statusEl.classList.remove('show');
+    setLiveStatus('');
+    forgotText.textContent = text;
+    pendingAction = onOk;
+    forgotNotice.classList.add('show');
+  }
+
+  forgotOkBtn.addEventListener('click', () => {
+    forgotNotice.classList.remove('show');
+    const action = pendingAction;
+    pendingAction = null;
+    if (action) action();
+  });
 
   function resetToHome(clearFio) {
     if (stream) {
@@ -660,7 +721,9 @@
     captureBtn.classList.remove('show');
     retakeRow.classList.remove('show');
     backBtn.classList.remove('show');
-    nightConfirm.classList.remove('show');
+    forgotNotice.classList.remove('show');
+    pendingAction = null;
+    setLiveStatus('');
     commentField.classList.remove('show');
     commentField.value = '';
     delete commentField.dataset.required;
@@ -693,16 +756,6 @@
     if (e.target && e.target.id === 'againBtn') {
       resetToHome(true);
     }
-  });
-
-  nightForgotBtn.addEventListener('click', () => {
-    nightConfirm.classList.remove('show');
-    actionButtons.classList.remove('hidden');
-    log('<div class="loading-big" style="animation:none">Нажмите «Закончить смену», затем откройте ночную</div>');
-  });
-  nightOkBtn.addEventListener('click', () => {
-    nightConfirm.classList.remove('show');
-    startCamera();
   });
 
   startBtn.addEventListener('click', () => beginFlow('start', false));
@@ -742,7 +795,7 @@
     ctx.textBaseline = 'middle';
     ctx.fillText(timeStr, w / 2, bandH / 2);
 
-    capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+    capturedPhoto = canvas.toDataURL('image/jpeg', 0.62);
     preview.src = capturedPhoto;
     preview.style.display = 'block';
     video.style.display = 'none';
@@ -751,12 +804,15 @@
 
     if (shiftType === 'end') {
       const reason = specialShiftReason();
-      // Комментарий больше нигде не блокирует отправку — поле всегда по желанию,
-      // но подсказка меняется в зависимости от ситуации.
       if (noOpenShift) {
+        // Закрытие без открытия — комментарий обязателен, без него не отправить
         commentField.classList.add('show');
-        commentField.placeholder = 'Вы закрываете смену, не открыв её. По желанию укажите причину — например: забыл открыть утром, пришёл в 8:00';
+        commentField.dataset.required = 'true';
+        commentField.placeholder = 'Вы закрываете смену, не открыв её. Укажите причину — например: забыл открыть утром, пришёл в 8:00';
+        commentNote.classList.add('show');
+        commentNote.textContent = 'Обязательно заполните комментарий перед отправкой';
       } else if (reason) {
+        // Ночная смена — по желанию
         commentField.classList.add('show');
         commentField.placeholder = `${reason} — комментарий по желанию`;
       }
@@ -767,7 +823,11 @@
     updateSubmitState();
 
     setTimeout(function() {
-      preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (commentField.dataset.required === 'true') {
+        commentField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }, 100);
   });
 
@@ -793,12 +853,35 @@
       return;
     }
 
+    if (commentField.dataset.required === 'true') {
+      const text = commentField.value.trim();
+      if (text.length < 10) {
+        commentNote.classList.add('show', 'error');
+        commentNote.textContent = 'Опишите чуть подробнее, что делали (минимум пара слов)';
+        commentField.focus();
+        return;
+      }
+    }
+
     submitBtn.disabled = true;
     retakeBtn.disabled = true;
     backBtn.classList.remove('show');
     actionDock.classList.remove('show');
     document.body.classList.remove('docked');
     updateStatus('<div class="loading-big" id="sendingRow"><span class="spinner"></span>Ожидайте, отправляем данные…</div>');
+
+    // На слабом интернете отправка может идти дольше обычного —
+    // через 5 секунд меняем сообщение, чтобы не выглядело зависшим
+    function setSendingLiveMessage(html) {
+      const row = document.getElementById('sendingRow');
+      if (row) row.innerHTML = html;
+      setLiveStatus(html);
+    }
+    const weakInternetTimer = setTimeout(function() {
+      if (document.getElementById('sendingRow')) {
+        setSendingLiveMessage('<span class="spinner"></span>Слабый интернет — это нормально, продолжаем ждать…');
+      }
+    }, 5000);
 
     const clientId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 
@@ -829,7 +912,8 @@
       .catch(() => { checkDelivery(clientId, 0); });
 
     function checkDelivery(id, attempt) {
-      if (attempt >= 8) {
+      if (attempt >= 15) {
+        clearTimeout(weakInternetTimer);
         finishSending(null);
         return;
       }
@@ -837,16 +921,17 @@
       window[cbName] = function(data) {
         delete window[cbName];
         if (data.found) {
+          clearTimeout(weakInternetTimer);
           finishSending(data.result);
         } else {
-          setTimeout(() => checkDelivery(id, attempt + 1), 2000);
+          setTimeout(() => checkDelivery(id, attempt + 1), 2500);
         }
       };
       const s = document.createElement('script');
       s.src = SCRIPT_URL + '?action=check&id=' + encodeURIComponent(id) + '&callback=' + cbName + '&_=' + Date.now();
       s.onerror = function() {
         delete window[cbName];
-        setTimeout(() => checkDelivery(id, attempt + 1), 2000);
+        setTimeout(() => checkDelivery(id, attempt + 1), 2500);
       };
       document.body.appendChild(s);
     }
@@ -870,11 +955,23 @@
         }
         log(statusEl.innerHTML + `<div class="success">Данные записаны</div>` + bigMsg +
             '<button class="btn-again" id="againBtn">Отметить ещё</button>');
+
+        let shortFinal;
+        if (shiftType === 'start' && !isNightShift) {
+          shortFinal = 'Смена открыта — не забудьте закрыть';
+        } else if (shiftType === 'start' && isNightShift) {
+          shortFinal = 'Ночная смена открыта — закройте утром';
+        } else {
+          shortFinal = 'Смена закрыта — спасибо за работу!';
+        }
+        setLiveStatus(shortFinal, true);
+
         setTimeout(function() {
           statusEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }, 100);
       } else if (result && !result.success) {
         log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
+        setLiveStatus('Ошибка: ' + result.error);
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
         backBtn.classList.add('show');
@@ -882,6 +979,7 @@
         document.body.classList.add('docked');
       } else {
         log(statusEl.innerHTML + `<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
+        setLiveStatus('Не удалось подтвердить доставку — попробуйте ещё раз');
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
         backBtn.classList.add('show');
