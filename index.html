@@ -6,7 +6,7 @@
 <title>Екатерининский парк — Учёт смен</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Tenor+Sans&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Tenor+Sans&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #111111;
@@ -59,10 +59,10 @@
     margin-bottom: 14px;
   }
   h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(30px, calc((100vw - 48px) * 0.125), 46px);
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, calc((100vw - 48px) * 0.128), 46px);
     line-height: 1.08;
-    font-weight: 700;
+    font-weight: 900;
     letter-spacing: 0.01em;
     margin: 0 0 30px;
   }
@@ -163,19 +163,16 @@
   #nightStartBtn { animation-delay: 0.75s; }
   #nightEndBtn { animation-delay: 0.85s; }
   #startBtn, #endBtn, #nightStartBtn, #nightEndBtn {
-    -webkit-text-stroke: 0.5px currentColor;
-    letter-spacing: 0.12em;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    padding-left: 4px; padding-right: 4px;
   }
-  #startBtn, #endBtn, #nightStartBtn, #nightEndBtn { padding-left: 4px; padding-right: 4px; }
-  .b-top {
-    display: block; white-space: nowrap; letter-spacing: 0.06em;
-    font-size: clamp(9px, calc((50vw - 40px) * 0.0891), 13px);
+  /* обе строки кнопки — один размер; подгоняется под ширину экрана, чтобы «ДНЕВНАЯ СМЕНА» не переносилась */
+  .b-top, .b-act {
+    display: block; white-space: nowrap; letter-spacing: 0.04em;
+    font-size: clamp(9px, calc((50vw - 40px) * 0.096), 17px);
   }
-  .b-act {
-    display: block; margin-top: 8px;
-    font-size: 17px; letter-spacing: 0.1em;
-    -webkit-text-stroke: 0.8px currentColor;
-  }
+  .b-act { margin-top: 8px; }
   /* дневные: синяя обводка */
   #startBtn, #endBtn { border-color: var(--blue); }
   #startBtn:hover, #endBtn:hover { background: var(--blue); color: var(--paper); }
@@ -340,7 +337,7 @@
 
 <div class="wrap">
   <div class="eyebrow"></div>
-  <h1>Учёт<br>рабочего времени</h1>
+  <h1>Учёт рабочего<br>времени</h1>
 
   <div class="loading-big" id="loadBanner"><span class="spinner"></span>Ожидайте, информация загружается…</div>
 
@@ -393,7 +390,7 @@
     </details>
   </div>
 
-  <div class="version-tag">версия 37</div>
+  <div class="version-tag">версия 38</div>
 </div>
 
 <div class="action-dock" id="actionDock">
@@ -546,7 +543,6 @@
   }
   function specialShiftReason() {
     if (isNightShift) return 'Ночная смена';
-    if (isWeekend(new Date())) return 'Смена в выходной день';
     return null;
   }
 
@@ -852,32 +848,16 @@
     captureBtn.classList.remove('show');
     retakeRow.classList.add('show');
 
-    if (shiftType === 'end') {
-      const reason = specialShiftReason();
-      if (noOpenShift) {
-        // Закрытие без открытия — комментарий обязателен, без него не отправить
-        commentField.classList.add('show');
-        commentField.dataset.required = 'true';
-        commentField.placeholder = 'Вы закрываете смену, не открыв её. Укажите причину — например: забыл открыть утром, пришёл в 8:00';
-        commentNote.classList.add('show');
-        commentNote.textContent = 'Обязательно заполните комментарий перед отправкой';
-      } else if (reason) {
-        // Ночная смена — по желанию
-        commentField.classList.add('show');
-        commentField.placeholder = `${reason} — комментарий по желанию`;
-      }
-    }
+    // Место для комментария одинаково при любой отметке, всегда по желанию
+    commentField.classList.add('show');
+    commentField.placeholder = 'Комментарий (по желанию)';
 
     stream.getTracks().forEach(t => t.stop());
     updateStatus();
     updateSubmitState();
 
     setTimeout(function() {
-      if (commentField.dataset.required === 'true') {
-        commentField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   });
 
@@ -901,16 +881,6 @@
         updateStatus('<div class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение… После этого нажмите «Отправить» ещё раз.</div>');
       }
       return;
-    }
-
-    if (commentField.dataset.required === 'true') {
-      const text = commentField.value.trim();
-      if (text.length < 10) {
-        commentNote.classList.add('show', 'error');
-        commentNote.textContent = 'Опишите чуть подробнее, что делали (минимум пара слов)';
-        commentField.focus();
-        return;
-      }
     }
 
     submitBtn.disabled = true;
@@ -994,17 +964,15 @@
         let bigMsg;
         if (shiftType === 'start' && !isNightShift) {
           bigMsg = '<div class="final-big">Смена открыта</div>' +
-                   '<div class="final-sub">Не забудьте закрыть её в конце рабочего дня!</div>' +
-                   '<div class="final-note">Работаете сегодня день и ночь? Вечером закройте дневную смену и откройте ночную</div>';
+                   '<div class="final-sub">Не забудьте закрыть её в конце рабочего дня!</div>';
         } else if (shiftType === 'start' && isNightShift) {
           bigMsg = '<div class="final-big">Ночная смена открыта</div>' +
-                   '<div class="final-sub">Не забудьте закрыть её утром!</div>' +
-                   '<div class="final-note">Этим вы подтверждаете отработанные часы</div>';
+                   '<div class="final-sub">Не забудьте закрыть её утром!</div>';
         } else {
           bigMsg = '<div class="final-big">Смена закрыта</div><div class="final-sub">Спасибо за работу!</div>';
         }
         log(statusEl.innerHTML + `<div class="success">Данные записаны</div>` + bigMsg +
-            '<button class="btn-again" id="againBtn">Отметить ещё</button>');
+            '<button class="btn-again" id="againBtn">На главный экран</button>');
 
         let shortFinal;
         if (shiftType === 'start' && !isNightShift) {
