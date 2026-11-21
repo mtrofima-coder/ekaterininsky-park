@@ -6,10 +6,13 @@
 <title>Екатерининский парк — Учёт смен</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Tenor+Sans&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Tenor+Sans&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #111111;
+    --text: #1D3A7C;   /* тёмно-синий цвет текста */
+    --blue: #1D3A7C;   /* синий для рамок и заливки главных кнопок */
+    --blue-dark: #152D63;   /* синий при нажатии */
     --paper: #ffffff;
     --line: #e3e3e3;
     --muted: #9a9a9a;
@@ -19,7 +22,7 @@
   html, body {
     margin: 0;
     background: var(--paper);
-    color: var(--ink);
+    color: var(--text);
     font-family: 'Tenor Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
@@ -37,16 +40,17 @@
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .eyebrow, h1, .notice, .search-box, label {
+  .eyebrow, h1, .notice, .help, .search-box, label {
     opacity: 0;
     animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   .eyebrow { animation-delay: 0.05s; }
   h1 { animation-delay: 0.15s; }
-  .notice { animation-delay: 0.3s; }
+  .notice { animation-delay: 0.95s; }
   label { animation-delay: 0.4s; }
   .search-box { animation-delay: 0.45s; }
 
+  .eyebrow:empty { display: none; }
   .eyebrow {
     font-size: 11px;
     letter-spacing: 0.28em;
@@ -56,9 +60,9 @@
   }
   h1 {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 42px;
-    line-height: 1.1;
-    font-weight: 500;
+    font-size: clamp(30px, calc((100vw - 48px) * 0.125), 46px);
+    line-height: 1.08;
+    font-weight: 700;
     letter-spacing: 0.01em;
     margin: 0 0 30px;
   }
@@ -70,7 +74,7 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     padding: 16px 18px;
-    margin-bottom: 30px;
+    margin-top: 28px;
     line-height: 1.9;
     color: #ffffff;
     text-align: center;
@@ -79,13 +83,27 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.72; }
   }
-  .notice.pulse { animation: rise 0.9s cubic-bezier(0.16,1,0.3,1) forwards, noticePulse 2.2s ease-in-out 1.2s infinite; }
+  .notice.pulse { animation: rise 0.9s cubic-bezier(0.16,1,0.3,1) 0.95s forwards, noticePulse 2.2s ease-in-out 2.1s infinite; }
+  .notice b { display: block; margin-bottom: 6px; }
+  .help { animation-delay: 1.05s; margin-top: 14px; }
+  .help summary {
+    cursor: pointer; list-style: none; padding: 10px 0;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text); -webkit-text-stroke: 0.3px currentColor;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .help summary::-webkit-details-marker { display: none; }
+  .help summary::before { content: '+\00a0\00a0'; }
+  .help[open] summary::before { content: '\2212\00a0\00a0'; }
+  .help ul { margin: 4px 0 0; padding-left: 20px; font-size: 14px; line-height: 1.7; color: var(--text); }
+  .help li { margin-bottom: 10px; }
   label {
     display: block;
-    font-size: 10px;
-    letter-spacing: 0.24em;
+    font-size: 21px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--text);
+    -webkit-text-stroke: 0.8px currentColor;
     margin-bottom: 10px;
   }
   .search-box { position: relative; margin-bottom: 36px; z-index: 50; }
@@ -95,12 +113,13 @@
     border: none;
     border-bottom: 1px solid var(--ink);
     background: transparent;
-    color: var(--ink);
+    color: var(--text);
     font-family: 'Tenor Sans', sans-serif;
-    font-size: 16px;
+    font-size: 19px;
+    -webkit-text-stroke: 0.35px currentColor;
   }
   #employeeSearch:focus { outline: none; }
-  #employeeSearch::placeholder { color: var(--muted); }
+  #employeeSearch::placeholder { color: #6b6b6b; }
   #employeeSearch:disabled { color: var(--muted); }
   .search-results {
     position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
@@ -112,7 +131,8 @@
   .search-results.show { display: block; }
   .search-item {
     padding: 14px 16px;
-    font-size: 14px;
+    font-size: 16px;
+    -webkit-text-stroke: 0.3px currentColor;
     cursor: pointer;
     border-bottom: 1px solid var(--line);
   }
@@ -124,7 +144,7 @@
   button {
     border: 1px solid var(--ink);
     background: transparent;
-    color: var(--ink);
+    color: var(--text);
     padding: 21px 10px;
     font-family: 'Tenor Sans', sans-serif;
     font-size: 13px;
@@ -142,6 +162,26 @@
   #endBtn { animation-delay: 0.65s; }
   #nightStartBtn { animation-delay: 0.75s; }
   #nightEndBtn { animation-delay: 0.85s; }
+  #startBtn, #endBtn, #nightStartBtn, #nightEndBtn {
+    -webkit-text-stroke: 0.5px currentColor;
+    letter-spacing: 0.12em;
+  }
+  #startBtn, #endBtn, #nightStartBtn, #nightEndBtn { padding-left: 4px; padding-right: 4px; }
+  .b-top {
+    display: block; white-space: nowrap; letter-spacing: 0.06em;
+    font-size: clamp(9px, calc((50vw - 40px) * 0.0891), 13px);
+  }
+  .b-act {
+    display: block; margin-top: 8px;
+    font-size: 17px; letter-spacing: 0.1em;
+    -webkit-text-stroke: 0.8px currentColor;
+  }
+  /* дневные: синяя обводка */
+  #startBtn, #endBtn { border-color: var(--blue); }
+  #startBtn:hover, #endBtn:hover { background: var(--blue); color: var(--paper); }
+  /* ночные: синяя заливка */
+  #nightStartBtn, #nightEndBtn { background: var(--blue); border-color: var(--blue); color: var(--paper); }
+  #nightStartBtn:hover, #nightEndBtn:hover { background: var(--blue-dark); }
   .btn-row-night { margin-top: 2px; }
   button:hover { background: var(--ink); color: var(--paper); }
   .btn-outline-muted { background: var(--ink); color: var(--paper); }
@@ -184,7 +224,7 @@
   textarea {
     width: 100%; padding: 14px 2px;
     border: none; border-bottom: 1px solid var(--line);
-    background: transparent; color: var(--ink);
+    background: transparent; color: var(--text);
     font-family: 'Tenor Sans', sans-serif; font-size: 14px;
     resize: none; margin-top: 20px; min-height: 64px; display: none;
   }
@@ -196,7 +236,7 @@
     color: var(--muted); margin-top: 8px; display: none;
   }
   .field-note.show { display: block; }
-  .field-note.error { color: var(--ink); }
+  .field-note.error { color: var(--text); }
 
   .status {
     margin-top: 30px; padding-top: 24px;
@@ -205,12 +245,12 @@
     display: none;
   }
   .status.show { display: block; }
-  .status b { color: var(--ink); font-weight: 400; }
+  .status b { color: var(--text); font-weight: 400; }
   .success {
     margin-top: 16px; font-size: 11px;
-    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink);
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
   }
-  .error-msg { margin-top: 16px; font-size: 13px; color: var(--ink); }
+  .error-msg { margin-top: 16px; font-size: 13px; color: var(--text); }
   .hidden { display: none !important; }
 
   .loading-big {
@@ -230,7 +270,7 @@
   .final-big {
     font-family: 'Cormorant Garamond', serif;
     font-size: 34px; font-weight: 500;
-    color: var(--ink); margin-top: 26px; line-height: 1.15;
+    color: var(--text); margin-top: 26px; line-height: 1.15;
   }
   .final-sub {
     font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
@@ -263,7 +303,7 @@
     color: var(--muted); text-align: left; cursor: pointer;
     opacity: 1 !important; animation: none !important; transform: none !important;
   }
-  .btn-back:hover { color: var(--ink); background: none; }
+  .btn-back:hover { color: var(--text); background: none; }
   .btn-back.show { display: block; }
   .live-status {
     display: none;
@@ -271,7 +311,7 @@
     padding: 12px 0 2px; color: var(--accent); line-height: 1.7;
   }
   .live-status.show { display: block; animation: rise 0.35s ease forwards; }
-  .live-status.ok { color: var(--ink); }
+  .live-status.ok { color: var(--text); }
   .btn-again {
     width: 100%; margin-top: 22px;
     background: var(--ink); color: var(--paper);
@@ -299,10 +339,8 @@
 <body>
 
 <div class="wrap">
-  <div class="eyebrow">Учёт рабочего времени</div>
-  <h1>Екатерининский парк</h1>
-
-  <div class="notice pulse" id="vpnNotice">Перед отметкой: выключите VPN и включите геолокацию на телефоне</div>
+  <div class="eyebrow"></div>
+  <h1>Учёт<br>рабочего времени</h1>
 
   <div class="loading-big" id="loadBanner"><span class="spinner"></span>Ожидайте, информация загружается…</div>
 
@@ -314,12 +352,12 @@
 
   <div id="actionButtons">
     <div class="btn-row">
-      <button id="startBtn">Начать смену</button>
-      <button id="endBtn">Закончить смену</button>
+      <button id="startBtn"><span class="b-top">Дневная смена</span><span class="b-act">Открыть</span></button>
+      <button id="endBtn"><span class="b-top">Дневная смена</span><span class="b-act">Закрыть</span></button>
     </div>
     <div class="btn-row btn-row-night">
-      <button class="btn-outline-muted" id="nightStartBtn">Начать ночную смену</button>
-      <button class="btn-outline-muted" id="nightEndBtn">Закончить ночную смену</button>
+      <button class="btn-outline-muted" id="nightStartBtn"><span class="b-top">Ночная смена</span><span class="b-act">Открыть</span></button>
+      <button class="btn-outline-muted" id="nightEndBtn"><span class="b-top">Ночная смена</span><span class="b-act">Закрыть</span></button>
     </div>
   </div>
 
@@ -343,7 +381,19 @@
 
   <div class="status" id="status"></div>
 
-  <div class="version-tag">версия 28</div>
+  <div id="vpnNotice">
+    <div class="notice pulse"><b>Перед отметкой:</b>1. Выключите VPN<br>2. Включите геолокацию</div>
+    <details class="help">
+      <summary>Не открывается или долго грузится?</summary>
+      <ul>
+        <li>Закройте лишние вкладки браузера и откройте ссылку заново.</li>
+        <li>Слабый интернет: подождите, такое бывает, или перейдите туда, где связь лучше.</li>
+        <li>Не получается отметиться со своего телефона: отметьтесь с телефона коллеги, выберите себя в списке и сделайте фото.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="version-tag">версия 37</div>
 </div>
 
 <div class="action-dock" id="actionDock">
@@ -736,7 +786,7 @@
     locationData = null;
     locationFailed = false;
     noOpenShift = false;
-    eyebrowEl.textContent = 'Учёт рабочего времени';
+    eyebrowEl.textContent = '';
     h1El.style.display = '';
     vpnEl.style.display = '';
     actionDock.classList.remove('show');
