@@ -52,10 +52,11 @@
 
   .eyebrow:empty { display: none; }
   .eyebrow {
-    font-size: 11px;
-    letter-spacing: 0.28em;
+    font-size: 15px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink);
+    -webkit-text-stroke: 0.5px currentColor;
     margin-bottom: 14px;
   }
   h1 {
@@ -119,7 +120,7 @@
     -webkit-text-stroke: 0.35px currentColor;
   }
   #employeeSearch:focus { outline: none; }
-  #employeeSearch::placeholder { color: #6b6b6b; }
+  #employeeSearch::placeholder { color: #1a1a1a; }
   #employeeSearch:disabled { color: var(--muted); }
   .search-results {
     position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
@@ -163,14 +164,17 @@
   #nightStartBtn { animation-delay: 0.75s; }
   #nightEndBtn { animation-delay: 0.85s; }
   #startBtn, #endBtn, #nightStartBtn, #nightEndBtn {
-    font-family: 'Playfair Display', serif;
-    font-weight: 900;
-    padding-left: 4px; padding-right: 4px;
+    font-family: 'Tenor Sans', sans-serif;
+    font-weight: 400;
+    -webkit-text-stroke: 0.7px currentColor;   /* жирность без искажения ширины букв */
+    padding-left: 2px; padding-right: 2px;
   }
-  /* обе строки кнопки — один размер; подгоняется под ширину экрана, чтобы «ДНЕВНАЯ СМЕНА» не переносилась */
+  #actionButtons .btn-row { gap: 8px; }
+  /* обе строки кнопки — один размер, самый крупный из возможных:
+     «ДНЕВНАЯ СМЕНА» должна поместиться в одну строку */
   .b-top, .b-act {
-    display: block; white-space: nowrap; letter-spacing: 0.04em;
-    font-size: clamp(9px, calc((50vw - 40px) * 0.096), 17px);
+    display: block; white-space: nowrap; letter-spacing: 0.02em;
+    font-size: clamp(9px, calc((50vw - 34px) * 0.0958), 18px);
   }
   .b-act { margin-top: 8px; }
   /* дневные: синяя обводка */
@@ -227,7 +231,8 @@
   }
   textarea.show { display: block; }
   textarea:focus { outline: none; border-bottom-color: var(--ink); }
-  textarea::placeholder { color: var(--muted); }
+  textarea::placeholder { color: #1a1a1a; }
+  textarea { -webkit-text-stroke: 0.3px currentColor; }
   .field-note {
     font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--muted); margin-top: 8px; display: none;
@@ -236,24 +241,28 @@
   .field-note.error { color: var(--text); }
 
   .status {
-    margin-top: 30px; padding-top: 24px;
-    border-top: 1px solid var(--line);
-    font-size: 13px; color: var(--muted); line-height: 2;
+    margin-top: 18px;
+    font-size: 15px; color: var(--ink); line-height: 1.7;
     display: none;
   }
   .status.show { display: block; }
   .status b { color: var(--text); font-weight: 400; }
   .success {
-    margin-top: 16px; font-size: 11px;
+    margin-top: 12px; font-size: 14px;
     letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
+    -webkit-text-stroke: 0.4px currentColor;
   }
-  .error-msg { margin-top: 16px; font-size: 13px; color: var(--text); }
+  .error-msg {
+    margin-top: 12px; font-size: 15px; line-height: 1.6; color: var(--text);
+    -webkit-text-stroke: 0.4px currentColor;
+  }
   .hidden { display: none !important; }
 
   .loading-big {
     color: var(--accent);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 700;
+    -webkit-text-stroke: 0.4px currentColor;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     line-height: 2;
@@ -266,11 +275,12 @@
 
   .final-big {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 34px; font-weight: 500;
-    color: var(--text); margin-top: 26px; line-height: 1.15;
+    font-size: 42px; font-weight: 700;
+    color: var(--text); margin-top: 8px; line-height: 1.1;
   }
   .final-sub {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    font-size: 15px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    -webkit-text-stroke: 0.4px currentColor;
     color: var(--accent); margin-top: 10px;
   }
   .confirm-box {
@@ -281,7 +291,8 @@
   }
   .confirm-box.show { display: block; animation: rise 0.5s cubic-bezier(0.16,1,0.3,1); }
   .confirm-box .q {
-    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink); -webkit-text-stroke: 0.4px currentColor;
+    font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
     line-height: 1.9; margin-bottom: 18px; text-align: center;
   }
   .confirm-box button {
@@ -302,13 +313,6 @@
   }
   .btn-back:hover { color: var(--text); background: none; }
   .btn-back.show { display: block; }
-  .live-status {
-    display: none;
-    font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 12px 0 2px; color: var(--accent); line-height: 1.7;
-  }
-  .live-status.show { display: block; animation: rise 0.35s ease forwards; }
-  .live-status.ok { color: var(--text); }
   .btn-again {
     width: 100%; margin-top: 22px;
     background: var(--ink); color: var(--paper);
@@ -360,7 +364,7 @@
 
   <button class="btn-back" id="backBtn">← Назад</button>
 
-  <div class="live-status" id="liveStatus"></div>
+  <div class="status" id="status"></div>
 
   <video id="video" autoplay playsinline></video>
   <canvas id="canvas"></canvas>
@@ -369,14 +373,20 @@
   <textarea id="comment" placeholder="Опишите, что делали"></textarea>
   <div class="field-note" id="commentNote">Заполните перед отправкой</div>
 
+  <div class="confirm-box" id="switchHint">
+    <div class="q" id="switchText"></div>
+    <div class="btn-row">
+      <button class="btn-solid" id="switchYesBtn"></button>
+      <button id="switchNoBtn"></button>
+    </div>
+  </div>
+
   <div class="confirm-box" id="forgotNotice">
     <div class="q" id="forgotText"></div>
     <div class="btn-row">
       <button class="btn-solid" id="forgotOkBtn">Понятно</button>
     </div>
   </div>
-
-  <div class="status" id="status"></div>
 
   <div id="vpnNotice">
     <div class="notice pulse"><b>Перед отметкой:</b>1. Выключите VPN<br>2. Включите геолокацию</div>
@@ -390,7 +400,7 @@
     </details>
   </div>
 
-  <div class="version-tag">версия 38</div>
+  <div class="version-tag">версия 39</div>
 </div>
 
 <div class="action-dock" id="actionDock">
@@ -427,18 +437,8 @@
   const commentNote = document.getElementById('commentNote');
 
   const backBtn = document.getElementById('backBtn');
-  const liveStatusEl = document.getElementById('liveStatus');
-
-  function setLiveStatus(html, isFinal) {
-    if (!html) {
-      liveStatusEl.classList.remove('show', 'ok');
-      liveStatusEl.innerHTML = '';
-      return;
-    }
-    liveStatusEl.innerHTML = html;
-    liveStatusEl.classList.add('show');
-    liveStatusEl.classList.toggle('ok', !!isFinal);
-  }
+  function hideStatus() { statusEl.classList.remove('show'); statusEl.innerHTML = ''; }
+  let statusLocked = false;   // пока идёт отправка и после неё, поздние ответы геолокации не затирают сообщения
   const actionDock = document.getElementById('actionDock');
   const h1El = document.querySelector('h1');
   const vpnEl = document.getElementById('vpnNotice');
@@ -446,6 +446,12 @@
   const forgotText = document.getElementById('forgotText');
   const forgotOkBtn = document.getElementById('forgotOkBtn');
   let pendingAction = null;   // что выполнить после нажатия «Понятно»
+  const switchHint = document.getElementById('switchHint');
+  const switchText = document.getElementById('switchText');
+  const switchYesBtn = document.getElementById('switchYesBtn');
+  const switchNoBtn = document.getElementById('switchNoBtn');
+  let switchedFromNight = false;   // что нажали: «Ночная — Закрыть» (true) или «Дневная — Закрыть» (false)
+  const FORGOT_OPEN_TEXT = 'Вы забыли открыть смену. Просьба делать это вовремя — это может повлиять на оплату';
 
   let EMPLOYEES = [];
   let noOpenShift = false;      // закрытие смены без открытия — требуем комментарий
@@ -533,7 +539,6 @@
   function showBlockError(text) {
     actionButtons.classList.remove('hidden');
     searchInput.disabled = false;
-    setLiveStatus('');
     log('<div class="loading-big" style="animation:none">' + text + '</div>');
   }
 
@@ -655,38 +660,18 @@
 
   function updateStatus(extraHtml) {
     if (!selectedEmp) return;
-    const time = new Date().toLocaleString('ru-RU');
-
-    let locLine;
-    if (locationData) {
-      locLine = locationData.address
-        ? locationData.address + ' (' + locationData.lat + ', ' + locationData.lon + ')'
-        : locationData.lat + ', ' + locationData.lon;
-    } else if (locationFailed) {
-      locLine = '<span class="error-msg" style="margin:0">не определена — без геолокации отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</span>';
-    } else {
-      locLine = '<span class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение…</span>';
+    // Все сообщения выводятся наверху, под кнопкой «Назад»
+    if (extraHtml) { log(extraHtml); return; }
+    if (statusLocked) return;
+    if (!locationData && !locationFailed) {
+      log('<div class="loading-big"><span class="spinner"></span>Ожидайте, определяем местоположение…</div>');
+      return;
     }
-
-    // Всегда видимая короткая строка статуса (не требует прокрутки)
-    if (extraHtml) {
-      setLiveStatus(extraHtml.replace(/\s*id="[^"]*"/g, ''));
-    } else if (!locationData && !locationFailed) {
-      setLiveStatus('<span class="spinner"></span>Ожидайте, определяем местоположение…');
-    } else if (locationFailed) {
-      setLiveStatus('Локация не определена — отправка невозможна');
-    } else {
-      setLiveStatus('');
+    if (locationFailed) {
+      log('<div class="loading-big">Локация не определена — отправка невозможна. Разрешите доступ к местоположению и обновите страницу.</div>');
+      return;
     }
-
-    log(`
-      <div><b>Сотрудник</b> — ${selectedEmp.fio}${selectedEmp.dolzh ? ' — ' + selectedEmp.dolzh : ''}</div>
-      <div><b>Отдел</b> — ${selectedEmp.dept}</div>
-      <div><b>Событие</b> — ${shiftType === 'start' ? 'Начало смены' : 'Конец смены'}${isNightShift ? ' (ночная)' : ''}</div>
-      <div><b>Время</b> — ${time}</div>
-      <div><b>Локация</b> — ${locLine}</div>
-      ${extraHtml || ''}
-    `);
+    hideStatus();
   }
 
   function beginFlow(type, night) {
@@ -698,9 +683,9 @@
     isNightShift = night;
     noOpenShift = false;
     forgotNotice.classList.remove('show');
+    switchHint.classList.remove('show');
     actionButtons.classList.add('hidden');
     log('<div class="loading-big"><span class="spinner"></span>Ожидайте, проверяем данные…</div>');
-    setLiveStatus('<span class="spinner"></span>Ожидайте, проверяем данные…');
 
     jsonpState(selectedEmp.fio, function(st) {
       const isDayStart = (type === 'start' && !night);
@@ -727,11 +712,15 @@
         return;
       }
 
-      // Закрытие смены, которую не открывали — напоминание, затем обязательный комментарий
+      // Закрывают смену, которую не открывали
       if (type === 'end' && ((!night && !st.openDay) || (night && !st.openNight))) {
+        const otherOpen = night ? st.openDay : st.openNight;   // зато открыта смена другого вида
+        if (otherOpen) {
+          showSwitchHint(night);   // скорее всего нажали не ту кнопку — спрашиваем
+          return;
+        }
         noOpenShift = true;
-        showNotice('Вы забыли открыть смену. Просьба делать это вовремя — это может повлиять на оплату',
-          function() { startCamera(); });
+        showNotice(FORGOT_OPEN_TEXT, function() { startCamera(); });
         return;
       }
 
@@ -744,7 +733,6 @@
 
   function showNotice(text, onOk) {
     statusEl.classList.remove('show');
-    setLiveStatus('');
     forgotText.textContent = text;
     pendingAction = onOk;
     forgotNotice.classList.add('show');
@@ -755,6 +743,29 @@
     const action = pendingAction;
     pendingAction = null;
     if (action) action();
+  });
+
+  function showSwitchHint(night) {
+    hideStatus();
+    switchedFromNight = night;
+    switchText.textContent = night
+      ? 'У вас открыта дневная смена. Возможно, вы хотели закрыть её?'
+      : 'У вас открыта ночная смена. Возможно, вы хотели закрыть её?';
+    switchYesBtn.textContent = night ? 'Да, закрыть дневную' : 'Да, закрыть ночную';
+    switchNoBtn.textContent = night ? 'Нет, закрыть ночную' : 'Нет, закрыть дневную';
+    switchHint.classList.add('show');
+  }
+
+  switchYesBtn.addEventListener('click', () => {
+    switchHint.classList.remove('show');
+    isNightShift = !switchedFromNight;   // закрываем ту смену, которая действительно открыта
+    noOpenShift = false;
+    startCamera();
+  });
+  switchNoBtn.addEventListener('click', () => {
+    switchHint.classList.remove('show');
+    noOpenShift = true;
+    showNotice(FORGOT_OPEN_TEXT, function() { startCamera(); });
   });
 
   function resetToHome(clearFio) {
@@ -768,8 +779,9 @@
     retakeRow.classList.remove('show');
     backBtn.classList.remove('show');
     forgotNotice.classList.remove('show');
+    switchHint.classList.remove('show');
+    statusLocked = false;
     pendingAction = null;
-    setLiveStatus('');
     commentField.classList.remove('show');
     commentField.value = '';
     delete commentField.dataset.required;
@@ -888,6 +900,7 @@
     backBtn.classList.remove('show');
     actionDock.classList.remove('show');
     document.body.classList.remove('docked');
+    statusLocked = true;
     updateStatus('<div class="loading-big" id="sendingRow"><span class="spinner"></span>Ожидайте, отправляем данные…</div>');
 
     // На слабом интернете отправка может идти дольше обычного —
@@ -895,7 +908,6 @@
     function setSendingLiveMessage(html) {
       const row = document.getElementById('sendingRow');
       if (row) row.innerHTML = html;
-      setLiveStatus(html);
     }
     const weakInternetTimer = setTimeout(function() {
       if (document.getElementById('sendingRow')) {
@@ -971,33 +983,25 @@
         } else {
           bigMsg = '<div class="final-big">Смена закрыта</div><div class="final-sub">Спасибо за работу!</div>';
         }
-        log(statusEl.innerHTML + `<div class="success">Данные записаны</div>` + bigMsg +
+        log(`<div class="success">Данные записаны</div>` + bigMsg +
             '<button class="btn-again" id="againBtn">На главный экран</button>');
-
-        let shortFinal;
-        if (shiftType === 'start' && !isNightShift) {
-          shortFinal = 'Смена открыта — не забудьте закрыть';
-        } else if (shiftType === 'start' && isNightShift) {
-          shortFinal = 'Ночная смена открыта — закройте утром';
-        } else {
-          shortFinal = 'Смена закрыта — спасибо за работу!';
-        }
-        setLiveStatus(shortFinal, true);
-
-        setTimeout(function() {
-          statusEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }, 100);
+        // Под сообщением ничего не остаётся: прячем фото и комментарий
+        preview.style.display = 'none';
+        video.style.display = 'none';
+        commentField.classList.remove('show');
+        eyebrowEl.textContent = '';
+        setTimeout(function() { window.scrollTo({ top: 0, behavior: 'smooth' }); }, 100);
       } else if (result && !result.success) {
-        log(statusEl.innerHTML + `<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
-        setLiveStatus('Ошибка: ' + result.error);
+        log(`<div class="error-msg">Ошибка: ${result.error}. Попробуйте ещё раз.</div>`);
+        statusLocked = false;
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
         backBtn.classList.add('show');
         actionDock.classList.add('show');
         document.body.classList.add('docked');
       } else {
-        log(statusEl.innerHTML + `<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
-        setLiveStatus('Не удалось подтвердить доставку — попробуйте ещё раз');
+        log(`<div class="error-msg">Не удалось подтвердить доставку. Проверьте таблицу — запись могла сохраниться. Если нет, попробуйте ещё раз.</div>`);
+        statusLocked = false;
         submitBtn.disabled = false;
         retakeBtn.disabled = false;
         backBtn.classList.add('show');
